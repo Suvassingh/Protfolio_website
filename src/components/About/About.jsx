@@ -1,6 +1,7 @@
 
 import React from "react";
 import Tilt from 'react-parallax-tilt'
+import ReactTypingEffect from "react-typing-effect";
 import profileImage from '../../assets/profile.png';
 const About = () => {
   return (
@@ -25,7 +26,7 @@ const About = () => {
           <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold mb-4 leading-tight">
             <span className="text-white">I am a </span>
             <span className="text-[#B245ec]">
-              {/* <ReactTypingEffect
+              <ReactTypingEffect
                 text={[
                   "Fullstack Developer",
                   "App Developer",
@@ -39,7 +40,7 @@ const About = () => {
                 cursorRenderer={(cursor) => (
                   <span className="text-[#8245ec]">{cursor}</span>
                 )}
-              /> */}
+              /> 
             </span>
           </h3>
           {/* About Me paragraph */}
