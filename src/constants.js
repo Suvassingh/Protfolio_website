@@ -31,6 +31,7 @@ import mcLogo from "./assets/tech_logo/mc.png";
 import figmaLogo from "./assets/tech_logo/figma.png";
 import netlifyLogo from "./assets/tech_logo/netlify.png";
 import vercelLogo from "./assets/tech_logo/vercel.png";
+import flutterLogo from "./assets/tech_logo/flutter.png"
 
 
 // education logo
@@ -54,6 +55,7 @@ export const SkillsInfo = [
       { name: "GSAP", logo: gsapLogo },
       { name: "Material UI", logo: materialuiLogo },
       { name: "Bootstrap", logo: bootstrapLogo },
+      { name: "Flutter", logo: flutterLogo },
     ],
   },
   {
