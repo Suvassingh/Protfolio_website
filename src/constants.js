@@ -32,7 +32,7 @@ import figmaLogo from "./assets/tech_logo/figma.png";
 import netlifyLogo from "./assets/tech_logo/netlify.png";
 import vercelLogo from "./assets/tech_logo/vercel.png";
 import flutterLogo from "./assets/tech_logo/flutter.png"
-
+import cpp from "./assets/tech_logo/cpp.png";
 
 // education logo
 import lotusLogo from './assets/education_logo/lotus.png'
@@ -74,7 +74,7 @@ export const SkillsInfo = [
     title: "Languages",
     skills: [
       { name: "C", logo: cLogo },
-      { name: "CSharp", logo: csharpLogo },
+      { name: "C++", logo:cpp },
       { name: "Java", logo: javaLogo },
       { name: "Python", logo: pythonLogo },
       { name: "C-Sharp", logo: csharpLogo },
