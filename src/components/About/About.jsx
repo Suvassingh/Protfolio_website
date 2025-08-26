@@ -52,7 +52,7 @@ const About = () => {
             efficient solutions.
           </p>
           {/* Resume Button */}
-          <a
+          {/* <a
             href="https://drive.google.com/file/d/1ZZOiuyk1HT6kQS6aasemGLLImDrgOajd/view?usp=drive_link"
             target="_blank"
             rel="noopener noreferrer"
@@ -63,7 +63,7 @@ const About = () => {
             }}
           >
             DOWNLOAD CV
-          </a>
+          </a> */}
         </div>
         {/* Right side */}
         <div className="md:w-1/2 flex justify-center md:justify-end">
