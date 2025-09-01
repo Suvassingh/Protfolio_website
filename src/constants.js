@@ -168,7 +168,7 @@ export const education = [
       ],
       github: "https://github.com/Suvassingh/SEWAMITRA1.git",
       webapp: "",
-      apk:"/public/app-release.apk"
+      apk:"/public/sewamitra.apk"
     },
     {
       id: 2,

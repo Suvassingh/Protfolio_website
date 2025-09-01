@@ -120,7 +120,7 @@ const Work = () => {
                     View Live
                   </a>
                   <a
-                    href={selectedProject.apk}
+                    href="/public/sewamitra.apk"
                     download
                     className="w-full sm:w-1/3 bg-green-600 hover:bg-green-800 text-white px-4 py-2 rounded-xl text-center font-semibold"
                   >
