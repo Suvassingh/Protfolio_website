@@ -47,8 +47,8 @@ const About = () => {
           <p className="text-base sm:text-lg text-gray-400 mb-10 mt-8 leding-relaxed">
             I am a full-stack developer with over 2 years of experience in
             building scalable web applications. Skilled in both front-end and
-            back-end development, I specialize in the MERN stack and other
-            modern technologies to create seamless user experiences and
+            back-end development, I specialize in the MERN stack, Flutter and
+            other modern technologies to create seamless user experiences and
             efficient solutions.
           </p>
           {/* Resume Button */}
@@ -63,6 +63,20 @@ const About = () => {
             }}
           >
             DOWNLOAD CV
+          </a>
+          
+          {/* Blog Page */}
+          <a
+            href=""
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-white py-3 px-8 rounded-full mt-5 text-lg font-bold transition duration-300 transform hover:scale-105 ml-8 "
+            style={{
+              background: "linear-gradient(90deg, #8245ec, #a855f7)",
+              boxShadow: "0 0 2px #8245ec, 0 0 2px #8245ec, 0 0 40px #8245ec",
+            }}
+          >
+            Blog Page
           </a>
         </div>
         {/* Right side */}

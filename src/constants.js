@@ -27,7 +27,6 @@ import pythonLogo from "./assets/tech_logo/python.png";
 // import typescriptLogo from "./assets/tech_logo/typescript.png";
 import vscodeLogo from "./assets/tech_logo/vscode.png";
 import postmanLogo from "./assets/tech_logo/postman.png";
-import mcLogo from "./assets/tech_logo/mc.png";
 import figmaLogo from "./assets/tech_logo/figma.png";
 import netlifyLogo from "./assets/tech_logo/netlify.png";
 import vercelLogo from "./assets/tech_logo/vercel.png";
@@ -44,7 +43,7 @@ import kuLogo from './assets/education_logo/ku.png'
 import eStoreLogo from './assets/project/e-store.png'
 import sewaMitraLogo from './assets/project/sewamitra.png'
 import telemedicalLogo from './assets/project/d1.png'
-
+import shopifyLogo from './assets/project/shopify.png'
 
 
 
@@ -179,5 +178,14 @@ export const education = [
       github: "https://github.com/Suvassingh/TelemedicalApp.git",
       webapp: "",
     },
-    
+    {
+      id: 2,
+      title: "Shopify",
+      description:
+        "Shopify clone is an e-commerce platform that allows users to create and manage their own online stores, offering features like product listings, shopping carts, secure payments, and customizable themes for a seamless shopping experience.",
+      image: shopifyLogo,
+      tags: ["Flutter", "Firebase", "GETX"],
+      github: "https://github.com/Suvassingh/Shopify.git",
+      webapp: "",
+    },
   ];
