@@ -67,7 +67,7 @@ const About = () => {
           
           {/* Blog Page */}
           <a
-            href=""
+            href="/blog"
             target="_blank"
             rel="noopener noreferrer"
             className="text-white py-3 px-8 rounded-full mt-5 text-lg font-bold transition duration-300 transform hover:scale-105 ml-8 "
