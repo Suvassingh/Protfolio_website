@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+
+
+import React, { useState, useEffect } from "react";
 import { projects } from "../../constants";
 
 const Work = () => {
@@ -11,6 +13,18 @@ const Work = () => {
   const handleCloseModal = () => {
     setSelectedProject(null);
   };
+
+  // Prevent background scroll when modal is open
+  useEffect(() => {
+    if (selectedProject) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [selectedProject]);
 
   return (
     <section
@@ -64,34 +78,50 @@ const Work = () => {
         ))}
       </div>
 
-      {/* Modal Container */}
+      {/* Modal */}
       {selectedProject && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90 p-4">
-          <div className="bg-gray-900 rounded-xl shadow-2xl lg:w-full w-[90%] max-w-3xl overflow-hidden relative">
-            <div className="flex justify-end p-4">
+        /* Backdrop — click outside to close */
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90 p-4"
+          onClick={handleCloseModal}
+        >
+          {/* Modal box — stop click propagating to backdrop */}
+          <div
+            className="relative bg-gray-900 rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Sticky close button — always visible */}
+            <div className="flex justify-end px-4 pt-4 flex-shrink-0">
               <button
                 onClick={handleCloseModal}
-                className="text-white text-3xl font-bold hover:text-purple-500"
+                className="text-white text-3xl font-bold leading-none hover:text-purple-500 transition-colors"
+                aria-label="Close modal"
               >
                 &times;
               </button>
             </div>
 
-            <div className="flex flex-col">
+            {/* Scrollable content */}
+            <div className="overflow-y-auto flex-1">
+              {/* Image — capped height so it never pushes content off screen */}
               <div className="w-full flex justify-center bg-gray-900 px-4">
                 <img
                   src={selectedProject.image}
                   alt={selectedProject.title}
-                  className="lg:w-full w-[95%] object-contain rounded-xl shadow-2xl"
+                  className="w-full max-h-64 md:max-h-80 object-contain rounded-xl shadow-2xl"
                 />
               </div>
-              <div className="lg:p-8 p-6">
-                <h3 className="lg:text-3xl font-bold text-white mb-4 text-md">
+
+              {/* Text content */}
+              <div className="p-6 lg:p-8">
+                <h3 className="text-xl lg:text-3xl font-bold text-white mb-4">
                   {selectedProject.title}
                 </h3>
-                <p className="text-gray-400 mb-6 lg:text-base text-xs">
+                <p className="text-gray-400 mb-6 text-sm lg:text-base">
                   {selectedProject.description}
                 </p>
+
+                {/* Tags */}
                 <div className="flex flex-wrap gap-2 mb-6">
                   {selectedProject.tags.map((tag, index) => (
                     <span
@@ -102,30 +132,36 @@ const Work = () => {
                     </span>
                   ))}
                 </div>
-                <div className="flex gap-4">
+
+                {/* Action buttons */}
+                <div className="flex flex-wrap gap-3">
                   <a
                     href={selectedProject.github}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-1/2 bg-gray-800 hover:bg-purple-800 text-gray-400 lg:px-6 lg:py-2 px-2 py-1 rounded-xl lg:text-xl text-sm font-semibold text-center"
+                    className="flex-1 min-w-[120px] bg-gray-800 hover:bg-purple-800 text-gray-400 px-4 py-2 rounded-xl text-sm lg:text-base font-semibold text-center transition-colors"
                   >
                     View Code
                   </a>
-                  <a
-                    href={selectedProject.webapp}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-1/2 bg-purple-600 hover:bg-purple-800 text-white lg:px-6 lg:py-2 px-2 py-1 rounded-xl lg:text-xl text-sm font-semibold text-center"
-                  >
-                    View Live
-                  </a>
-                  <a
-                    href="/public/sewamitra.apk"
-                    download
-                    className="w-full sm:w-1/3 bg-green-600 hover:bg-green-800 text-white px-4 py-2 rounded-xl text-center font-semibold"
-                  >
-                    Download APK
-                  </a>
+                  {selectedProject.webapp && (
+                    <a
+                      href={selectedProject.webapp}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 min-w-[120px] bg-purple-600 hover:bg-purple-800 text-white px-4 py-2 rounded-xl text-sm lg:text-base font-semibold text-center transition-colors"
+                    >
+                      View Live
+                    </a>
+                  )}
+                  {selectedProject.apk && (
+                    <a
+                      href={selectedProject.apk}
+                      download
+                      className="flex-1 min-w-[120px] bg-green-600 hover:bg-green-800 text-white px-4 py-2 rounded-xl text-sm lg:text-base font-semibold text-center transition-colors"
+                    >
+                      Download APK
+                    </a>
+                  )}
                 </div>
               </div>
             </div>
