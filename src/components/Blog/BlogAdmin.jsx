@@ -1,5 +1,25 @@
+// src/pages/BlogAdmin.jsx
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  collection,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  getDocs,
+  orderBy,
+  query,
+  serverTimestamp,
+} from "firebase/firestore";
+import {
+  ref,
+  uploadString,
+  getDownloadURL,
+  deleteObject,
+} from "firebase/storage";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { db, auth, storage } from "../../firebase";
 
 const CATEGORIES = [
   "Tech",
@@ -10,41 +30,92 @@ const CATEGORIES = [
   "Other",
 ];
 
+// ── Image resizer (canvas-based, keeps localStorage/Storage small) ────────────
+function resizeImage(file, maxW = 1200, maxH = 800, quality = 0.82) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxW || height > maxH) {
+          const ratio = Math.min(maxW / width, maxH / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ── Upload base64 image to Firebase Storage, return public URL ────────────────
+async function uploadImageToStorage(base64, path) {
+  const storageRef = ref(storage, path);
+  await uploadString(storageRef, base64, "data_url");
+  return await getDownloadURL(storageRef);
+}
+
 const BlogAdmin = () => {
   const navigate = useNavigate();
   const editorRef = useRef(null);
   const fileInputRef = useRef(null);
   const coverInputRef = useRef(null);
 
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [posts, setPosts] = useState([]);
   const [view, setView] = useState("list"); // "list" | "editor"
   const [editingPost, setEditingPost] = useState(null);
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("Tech");
-  const [coverImage, setCoverImage] = useState("");
+  const [coverImage, setCoverImage] = useState(""); // local base64 preview
+  const [coverImageUrl, setCoverImageUrl] = useState(""); // Firebase Storage URL
   const [publishing, setPublishing] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
   const [activeFormats, setActiveFormats] = useState({});
 
-  // Auth guard
+  // ── Auth guard ─────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (sessionStorage.getItem("blog_auth") !== "true") {
-      navigate("/blog/login");
-    }
+    const unsub = onAuthStateChanged(auth, (u) => {
+      if (!u) {
+        navigate("/blog/login");
+      } else {
+        setUser(u);
+        setAuthLoading(false);
+      }
+    });
+    return unsub;
   }, [navigate]);
 
-  // Load posts
-  useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("blog_posts") || "[]");
-    setPosts(stored.sort((a, b) => b.createdAt - a.createdAt));
+  // ── Load all posts ─────────────────────────────────────────────────────────
+  const loadPosts = useCallback(async () => {
+    try {
+      const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
+      const snapshot = await getDocs(q);
+      const fetched = snapshot.docs.map((d) => ({
+        id: d.id,
+        ...d.data(),
+        createdAt: d.data().createdAt?.toMillis?.() ?? d.data().createdAt,
+        updatedAt: d.data().updatedAt?.toMillis?.() ?? d.data().updatedAt,
+      }));
+      setPosts(fetched);
+    } catch (err) {
+      console.error("Load posts error:", err);
+    }
   }, []);
 
-  const savePosts = (updated) => {
-    localStorage.setItem("blog_posts", JSON.stringify(updated));
-    setPosts(updated.sort((a, b) => b.createdAt - a.createdAt));
-  };
+  useEffect(() => {
+    if (!authLoading) loadPosts();
+  }, [authLoading, loadPosts]);
 
-  // Track active formatting states
+  // ── Editor helpers ─────────────────────────────────────────────────────────
   const updateActiveFormats = useCallback(() => {
     setActiveFormats({
       bold: document.queryCommandState("bold"),
@@ -65,16 +136,21 @@ const BlogAdmin = () => {
     updateActiveFormats();
   };
 
-  const handleFontSize = (size) => exec("fontSize", size);
-  const handleColor = (color) => exec("foreColor", color);
-  const handleHighlight = (color) => exec("hiliteColor", color);
+  // ── Cover image ─────────────────────────────────────────────────────────────
+  const handleCoverImage = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    // Resize to 1200×630 (ideal blog cover / OG ratio)
+    const resized = await resizeImage(file, 1200, 630, 0.85);
+    setCoverImage(resized); // show preview immediately
+    e.target.value = "";
+  };
 
-  // Insert image from file into editor body
+  // ── Inline body image ───────────────────────────────────────────────────────
   const handleInsertImage = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    // Body images: 900px wide max, slightly lower quality to save space
-    const resized = await resizeImage(file, 900, 600, 0.80);
+    const resized = await resizeImage(file, 900, 600, 0.8);
     exec("insertImage", resized);
     setTimeout(() => {
       editorRef.current?.querySelectorAll("img").forEach((img) => {
@@ -85,144 +161,149 @@ const BlogAdmin = () => {
     }, 50);
     e.target.value = "";
   };
-  function resizeImage(file, maxW = 1200, maxH = 800, quality = 0.82) {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        // Calculate new dimensions preserving aspect ratio
-        let { width, height } = img;
-        if (width > maxW || height > maxH) {
-          const ratio = Math.min(maxW / width, maxH / height);
-          width = Math.round(width * ratio);
-          height = Math.round(height * ratio);
-        }
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL("image/jpeg", quality));
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-  // Cover image
-const handleCoverImage = async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  // Cover: 1200×630 is ideal for blog cards (Open Graph ratio)
-  const resized = await resizeImage(file, 1200, 630, 0.85);
-  setCoverImage(resized);
-  e.target.value = "";
-};
 
   const handleInsertLink = () => {
     const url = prompt("Enter URL:");
     if (url) exec("createLink", url);
   };
 
-  const handleInsertHR = () => {
-    exec("insertHorizontalRule");
-  };
-
+  // ── Open new post ───────────────────────────────────────────────────────────
   const openNewPost = () => {
     setEditingPost(null);
     setTitle("");
     setCategory("Tech");
     setCoverImage("");
+    setCoverImageUrl("");
     setView("editor");
     setTimeout(() => {
       if (editorRef.current) editorRef.current.innerHTML = "<p><br></p>";
     }, 50);
   };
 
+  // ── Open existing post for editing ─────────────────────────────────────────
   const openEditPost = (post) => {
     setEditingPost(post);
     setTitle(post.title);
     setCategory(post.category || "Tech");
     setCoverImage(post.coverImage || "");
+    setCoverImageUrl(post.coverImageUrl || "");
     setView("editor");
     setTimeout(() => {
       if (editorRef.current) editorRef.current.innerHTML = post.content;
     }, 50);
   };
 
-  const handleSave = (publish = false) => {
+  // ── Save / Publish ──────────────────────────────────────────────────────────
+  const handleSave = async (publish = false) => {
     const content = editorRef.current?.innerHTML || "";
     if (!title.trim()) return alert("Please add a title.");
     if (content.replace(/<[^>]+>/g, "").trim().length < 5)
       return alert("Please write some content.");
 
     setPublishing(true);
-    const stored = JSON.parse(localStorage.getItem("blog_posts") || "[]");
-    const now = Date.now();
 
-    if (editingPost) {
-      const updated = stored.map((p) =>
-        p.id === editingPost.id
-          ? {
-              ...p,
-              title,
-              category,
-              coverImage,
-              content,
-              published: publish,
-              updatedAt: now,
-            }
-          : p,
-      );
-      savePosts(updated);
-    } else {
-      const newPost = {
-        id: now.toString(),
-        title,
+    try {
+      let finalCoverUrl = coverImageUrl;
+
+      // Upload cover to Firebase Storage if it's a new local base64 image
+      if (coverImage && coverImage.startsWith("data:")) {
+        const path = `covers/${Date.now()}_${title.replace(/\s+/g, "_").slice(0, 40)}.jpg`;
+        finalCoverUrl = await uploadImageToStorage(coverImage, path);
+        setCoverImageUrl(finalCoverUrl);
+      }
+
+      // Also upload any inline base64 images in the content to Storage
+      let finalContent = content;
+      const base64Imgs = content.match(/src="data:image[^"]+"/g) || [];
+      for (const match of base64Imgs) {
+        const base64 = match.slice(5, -1); // strip src=" and "
+        const path = `body/${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
+        const url = await uploadImageToStorage(base64, path);
+        finalContent = finalContent.replace(base64, url);
+      }
+
+      const postData = {
+        title: title.trim(),
         category,
-        coverImage,
-        content,
+        coverImage: coverImage.startsWith("data:") ? "" : coverImage,
+        coverImageUrl: finalCoverUrl,
+        content: finalContent,
         published: publish,
-        createdAt: now,
-        updatedAt: now,
+        updatedAt: serverTimestamp(),
       };
-      savePosts([...stored, newPost]);
+
+      if (editingPost) {
+        // Update existing
+        await updateDoc(doc(db, "posts", editingPost.id), postData);
+      } else {
+        // Create new
+        await addDoc(collection(db, "posts"), {
+          ...postData,
+          createdAt: serverTimestamp(),
+        });
+      }
+
+      await loadPosts();
+      setSaveMsg(publish ? "✅ Published!" : "💾 Draft saved!");
+      setTimeout(() => setSaveMsg(""), 2500);
+      setView("list");
+    } catch (err) {
+      console.error("Save error:", err);
+      alert("Failed to save. Check console for details.");
+    } finally {
+      setPublishing(false);
     }
-
-    setPublishing(false);
-    setSaveMsg(publish ? "✅ Published!" : "💾 Draft saved!");
-    setTimeout(() => setSaveMsg(""), 2500);
-    setView("list");
   };
 
-  const handleDelete = (id) => {
-    if (!window.confirm("Delete this post?")) return;
-    const stored = JSON.parse(localStorage.getItem("blog_posts") || "[]");
-    savePosts(stored.filter((p) => p.id !== id));
+  // ── Delete ──────────────────────────────────────────────────────────────────
+  const handleDelete = async (post) => {
+    if (!window.confirm("Delete this post permanently?")) return;
+    try {
+      await deleteDoc(doc(db, "posts", post.id));
+      // Try to delete cover from Storage if it's a Storage URL
+      if (post.coverImageUrl) {
+        try {
+          const storageRef = ref(storage, post.coverImageUrl);
+          await deleteObject(storageRef);
+        // eslint-disable-next-line no-unused-vars
+        } catch (_) {
+          // Ignore — URL might not be a Storage path ref
+        }
+      }
+      await loadPosts();
+    } catch (err) {
+      console.error("Delete error:", err);
+    }
   };
 
-  const handleTogglePublish = (post) => {
-    const stored = JSON.parse(localStorage.getItem("blog_posts") || "[]");
-    const updated = stored.map((p) =>
-      p.id === post.id ? { ...p, published: !p.published } : p,
-    );
-    savePosts(updated);
+  // ── Toggle publish ──────────────────────────────────────────────────────────
+  const handleTogglePublish = async (post) => {
+    try {
+      await updateDoc(doc(db, "posts", post.id), {
+        published: !post.published,
+        updatedAt: serverTimestamp(),
+      });
+      await loadPosts();
+    } catch (err) {
+      console.error("Toggle publish error:", err);
+    }
   };
 
   const formatDate = (ts) =>
-    new Date(ts).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
+    ts
+      ? new Date(ts).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
+      : "—";
 
-  const logout = () => {
-    sessionStorage.removeItem("blog_auth");
+  const logout = async () => {
+    await signOut(auth);
     navigate("/blog");
   };
 
-  // ─── TOOLBAR BUTTON ───────────────────────────────────────────────────────
+  // ── Toolbar button ──────────────────────────────────────────────────────────
   const ToolBtn = ({ cmd, label, title: tip, icon }) => (
     <button
       onMouseDown={(e) => {
@@ -240,7 +321,18 @@ const handleCoverImage = async (e) => {
     </button>
   );
 
-  // ─── POST LIST VIEW ───────────────────────────────────────────────────────
+  // ── Auth loading ────────────────────────────────────────────────────────────
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#050414] flex items-center justify-center">
+        <div className="text-gray-500 text-sm animate-pulse">Loading…</div>
+      </div>
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // POST LIST VIEW
+  // ─────────────────────────────────────────────────────────────────────────────
   if (view === "list") {
     return (
       <div className="min-h-screen bg-[#050414] text-white font-sans">
@@ -258,6 +350,9 @@ const handleCoverImage = async (e) => {
             {saveMsg && (
               <span className="text-sm text-green-400">{saveMsg}</span>
             )}
+            <span className="text-xs text-gray-600 hidden md:block">
+              {user?.email}
+            </span>
             <button
               onClick={() => navigate("/blog")}
               className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
@@ -319,9 +414,9 @@ const handleCoverImage = async (e) => {
                   key={post.id}
                   className="flex items-center gap-4 bg-gray-900/50 border border-white/5 rounded-xl p-4 hover:border-purple-500/20 transition-colors"
                 >
-                  {post.coverImage ? (
+                  {post.coverImageUrl || post.coverImage ? (
                     <img
-                      src={post.coverImage}
+                      src={post.coverImageUrl || post.coverImage}
                       alt=""
                       className="w-16 h-12 object-cover rounded-lg flex-shrink-0"
                     />
@@ -337,12 +432,10 @@ const handleCoverImage = async (e) => {
                     </h3>
                     <p className="text-xs text-gray-500 mt-0.5">
                       {post.category} · {formatDate(post.createdAt)}
-                      {post.updatedAt !== post.createdAt &&
-                        ` · edited ${formatDate(post.updatedAt)}`}
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
                     <span
                       className={`text-xs px-2.5 py-1 rounded-full border ${
                         post.published
@@ -365,7 +458,7 @@ const handleCoverImage = async (e) => {
                       Edit
                     </button>
                     <button
-                      onClick={() => handleDelete(post.id)}
+                      onClick={() => handleDelete(post)}
                       className="text-xs px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors"
                     >
                       Delete
@@ -380,7 +473,9 @@ const handleCoverImage = async (e) => {
     );
   }
 
-  // ─── EDITOR VIEW ──────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────────
+  // EDITOR VIEW
+  // ─────────────────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[#050414] text-white font-sans flex flex-col">
       <style>{`
@@ -397,8 +492,8 @@ const handleCoverImage = async (e) => {
         #blog-editor blockquote { border-left: 3px solid #8245ec; padding-left: 1rem; color: #9ca3af; font-style: italic; margin: 1rem 0; }
         #blog-editor a { color: #a855f7; text-decoration: underline; }
         #blog-editor hr { border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 1.5rem 0; }
+        #blog-editor code { font-family: monospace; background: rgba(130,69,236,0.12); padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
         #blog-editor:empty:before { content: 'Start writing your post here…'; color: #4b5563; }
-        .toolbar-btn-active { background: rgba(130,69,236,0.4) !important; color: #c084fc !important; }
       `}</style>
 
       {/* Top Bar */}
@@ -420,26 +515,30 @@ const handleCoverImage = async (e) => {
           {saveMsg && <span className="text-sm text-green-400">{saveMsg}</span>}
           <button
             onClick={() => handleSave(false)}
-            className="px-4 py-2 rounded-lg text-sm font-medium bg-white/5 border border-white/10 hover:bg-white/10 text-gray-300 transition-colors"
+            disabled={publishing}
+            className="px-4 py-2 rounded-lg text-sm font-medium bg-white/5 border border-white/10 hover:bg-white/10 text-gray-300 transition-colors disabled:opacity-40"
           >
             Save Draft
           </button>
           <button
             onClick={() => handleSave(true)}
             disabled={publishing}
-            className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:scale-105"
+            className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:scale-105 disabled:opacity-40 disabled:scale-100"
             style={{ background: "linear-gradient(135deg,#7c3aed,#a855f7)" }}
           >
-            {publishing ? "Publishing…" : "Publish →"}
+            {publishing ? "Saving…" : "Publish →"}
           </button>
         </div>
       </div>
 
       {/* Toolbar */}
       <div className="bg-[#0d0820] border-b border-white/5 px-4 py-2 flex flex-wrap items-center gap-1">
-        {/* Text style */}
+        {/* Block format */}
         <select
-          onChange={(e) => exec("formatBlock", e.target.value)}
+          onChange={(e) => {
+            exec("formatBlock", e.target.value);
+            e.target.value = "p";
+          }}
           className="bg-transparent text-gray-300 text-xs border border-white/10 rounded px-2 py-1.5 mr-1 focus:outline-none"
           defaultValue="p"
         >
@@ -453,7 +552,7 @@ const handleCoverImage = async (e) => {
 
         {/* Font size */}
         <select
-          onChange={(e) => handleFontSize(e.target.value)}
+          onChange={(e) => exec("fontSize", e.target.value)}
           className="bg-transparent text-gray-300 text-xs border border-white/10 rounded px-2 py-1.5 mr-2 focus:outline-none"
           defaultValue="3"
         >
@@ -493,7 +592,7 @@ const handleCoverImage = async (e) => {
           <input
             type="color"
             defaultValue="#ffffff"
-            onChange={(e) => handleColor(e.target.value)}
+            onChange={(e) => exec("foreColor", e.target.value)}
             className="w-6 h-6 rounded cursor-pointer border-0 bg-transparent"
             title="Text Color"
           />
@@ -503,7 +602,7 @@ const handleCoverImage = async (e) => {
           <input
             type="color"
             defaultValue="#8245ec"
-            onChange={(e) => handleHighlight(e.target.value)}
+            onChange={(e) => exec("hiliteColor", e.target.value)}
             className="w-6 h-6 rounded cursor-pointer border-0 bg-transparent"
             title="Highlight Color"
           />
@@ -539,11 +638,11 @@ const handleCoverImage = async (e) => {
           🔗 Link
         </button>
 
-        {/* HR */}
+        {/* Divider */}
         <button
           onMouseDown={(e) => {
             e.preventDefault();
-            handleInsertHR();
+            exec("insertHorizontalRule");
           }}
           title="Divider"
           className="px-2 py-1.5 rounded text-sm text-gray-300 hover:bg-white/10 transition-colors"
@@ -553,7 +652,7 @@ const handleCoverImage = async (e) => {
 
         <div className="w-px h-5 bg-white/10 mx-1" />
 
-        {/* Undo/Redo */}
+        {/* Undo / Redo */}
         <button
           onMouseDown={(e) => {
             e.preventDefault();
@@ -578,19 +677,21 @@ const handleCoverImage = async (e) => {
 
       {/* Editor Area */}
       <div className="flex-1 max-w-4xl mx-auto w-full px-4 md:px-8 py-8">
-        {/* Post Meta */}
         <div className="mb-6 space-y-4">
           {/* Cover image */}
           <div>
-            {coverImage ? (
+            {coverImage || coverImageUrl ? (
               <div className="relative group">
                 <img
-                  src={coverImage}
+                  src={coverImage || coverImageUrl}
                   alt="Cover"
                   className="w-full max-h-64 object-cover rounded-xl"
                 />
                 <button
-                  onClick={() => setCoverImage("")}
+                  onClick={() => {
+                    setCoverImage("");
+                    setCoverImageUrl("");
+                  }}
                   className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full w-7 h-7 text-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                 >
                   ×
@@ -614,7 +715,7 @@ const handleCoverImage = async (e) => {
           </div>
 
           {/* Category */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <label className="text-xs text-gray-500 uppercase tracking-wider">
               Category
             </label>

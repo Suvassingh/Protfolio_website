@@ -1,29 +1,44 @@
-import React, { useState } from "react";
+// src/pages/BlogLogin.jsx
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
-// ⚠️ Change this password to something only you know
-const ADMIN_PASSWORD = "subhash@blog2025";
+import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
+import { auth } from "../../firebase";
 
 const BlogLogin = () => {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  // If already logged in, go straight to admin
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (user) => {
+      if (user) navigate("/blog/admin");
+    });
+    return unsub;
+  }, [navigate]);
+
+  const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    setTimeout(() => {
-      if (password === ADMIN_PASSWORD) {
-        sessionStorage.setItem("blog_auth", "true");
-        navigate("/blog/admin");
-      } else {
-        setError("Incorrect password. Try again.");
-        setLoading(false);
-      }
-    }, 600);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      navigate("/blog/admin");
+    } catch (err) {
+      // Show friendly messages instead of raw Firebase codes
+      const msgs = {
+        "auth/user-not-found": "No account found with that email.",
+        "auth/wrong-password": "Incorrect password. Try again.",
+        "auth/invalid-email": "Please enter a valid email address.",
+        "auth/too-many-requests": "Too many attempts. Please wait a moment.",
+        "auth/invalid-credential": "Incorrect email or password.",
+      };
+      setError(msgs[err.code] || "Login failed. Please try again.");
+      setLoading(false);
+    }
   };
 
   return (
@@ -48,6 +63,23 @@ const BlogLogin = () => {
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
+          {/* Email */}
+          <div>
+            <label className="text-xs text-gray-400 mb-2 block tracking-wider uppercase">
+              Email
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="your@email.com"
+              required
+              autoFocus
+              className="w-full bg-gray-900/80 border border-white/10 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-500/60 transition-colors placeholder-gray-600"
+            />
+          </div>
+
+          {/* Password */}
           <div>
             <label className="text-xs text-gray-400 mb-2 block tracking-wider uppercase">
               Password
@@ -56,19 +88,20 @@ const BlogLogin = () => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your admin password"
+              placeholder="Enter your password"
               required
-              autoFocus
               className="w-full bg-gray-900/80 border border-white/10 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-500/60 transition-colors placeholder-gray-600"
             />
           </div>
 
+          {/* Error */}
           {error && (
-            <p className="text-red-400 text-xs text-center bg-red-500/10 border border-red-500/20 rounded-lg py-2">
+            <p className="text-red-400 text-xs text-center bg-red-500/10 border border-red-500/20 rounded-lg py-2 px-3">
               {error}
             </p>
           )}
 
+          {/* Submit */}
           <button
             type="submit"
             disabled={loading}
@@ -79,7 +112,7 @@ const BlogLogin = () => {
                 : "linear-gradient(135deg, #7c3aed, #a855f7)",
             }}
           >
-            {loading ? "Verifying…" : "Enter Admin →"}
+            {loading ? "Signing in…" : "Enter Admin →"}
           </button>
 
           <button
@@ -90,6 +123,12 @@ const BlogLogin = () => {
             ← Back to Blog
           </button>
         </form>
+
+        {/* Setup hint — remove after first login */}
+        <p className="text-center text-xs text-gray-700 mt-8">
+          First time? Create your admin account in Firebase Console →<br />
+          Authentication → Users → Add user
+        </p>
       </div>
     </div>
   );

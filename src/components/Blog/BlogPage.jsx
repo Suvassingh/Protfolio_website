@@ -1,17 +1,44 @@
+// src/pages/BlogPage.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { collection, query, where, orderBy, getDocs } from "firebase/firestore";
+import { db } from "../../firebase";
 
 const BlogPage = () => {
   const [posts, setPosts] = useState([]);
   const [selectedPost, setSelectedPost] = useState(null);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  // ── Fetch published posts from Firestore ──────────────────────────────────
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("blog_posts") || "[]");
-    const published = stored.filter((p) => p.published);
-    setPosts(published.sort((a, b) => b.createdAt - a.createdAt));
+    const fetchPosts = async () => {
+      try {
+        const q = query(
+          collection(db, "posts"),
+          where("published", "==", true),
+          orderBy("createdAt", "desc"),
+        );
+        const snapshot = await getDocs(q);
+        const fetched = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+          // Firestore Timestamps → milliseconds for consistent handling
+          createdAt: doc.data().createdAt?.toMillis?.() ?? doc.data().createdAt,
+          updatedAt: doc.data().updatedAt?.toMillis?.() ?? doc.data().updatedAt,
+        }));
+        setPosts(fetched);
+      } catch (err) {
+        console.error("Failed to fetch posts:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPosts();
   }, []);
 
+  // ── Helpers ───────────────────────────────────────────────────────────────
   const formatDate = (ts) =>
     new Date(ts).toLocaleDateString("en-US", {
       year: "numeric",
@@ -30,6 +57,7 @@ const BlogPage = () => {
     return text.slice(0, 160) + (text.length > 160 ? "…" : "");
   };
 
+  // ── Single post view ──────────────────────────────────────────────────────
   if (selectedPost) {
     return (
       <div className="min-h-screen bg-[#050414] text-white font-sans">
@@ -58,6 +86,7 @@ const BlogPage = () => {
               className="w-full max-h-96 object-cover rounded-2xl mb-10 shadow-[0_0_40px_rgba(130,69,236,0.2)]"
             />
           )}
+
           <div className="flex items-center gap-3 mb-6">
             <span className="text-xs text-purple-400 bg-purple-500/10 border border-purple-500/20 px-3 py-1 rounded-full">
               {selectedPost.category || "Blog"}
@@ -69,12 +98,14 @@ const BlogPage = () => {
               · {readTime(selectedPost.content)} min read
             </span>
           </div>
+
           <h1
             className="text-3xl md:text-5xl font-bold text-white leading-tight mb-6"
             style={{ fontFamily: "'Syne', sans-serif" }}
           >
             {selectedPost.title}
           </h1>
+
           <div className="flex items-center gap-3 mb-12 pb-8 border-b border-white/5">
             <div className="w-9 h-9 rounded-full bg-purple-700 flex items-center justify-center text-sm font-bold">
               S
@@ -84,8 +115,9 @@ const BlogPage = () => {
               <p className="text-xs text-gray-500">Author</p>
             </div>
           </div>
+
           <div
-            className="blog-content prose-custom"
+            className="blog-content"
             dangerouslySetInnerHTML={{ __html: selectedPost.content }}
           />
         </article>
@@ -111,6 +143,7 @@ const BlogPage = () => {
     );
   }
 
+  // ── Posts feed ────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[#050414] text-white font-sans">
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&display=swap');`}</style>
@@ -134,7 +167,7 @@ const BlogPage = () => {
       {/* Hero */}
       <div className="px-[7vw] md:px-[20vw] pt-20 pb-16 text-center">
         <p className="text-xs tracking-widest text-purple-400 uppercase mb-4">
-          Thoughts & Writings
+          Thoughts &amp; Writings
         </p>
         <h1
           className="text-5xl md:text-7xl font-bold text-white"
@@ -149,7 +182,25 @@ const BlogPage = () => {
 
       {/* Posts */}
       <div className="px-[7vw] md:px-[20vw] pb-24">
-        {posts.length === 0 ? (
+        {/* Loading skeleton */}
+        {loading ? (
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((n) => (
+              <div
+                key={n}
+                className="bg-gray-900/50 border border-white/5 rounded-2xl overflow-hidden animate-pulse"
+              >
+                <div className="w-full h-48 bg-white/5" />
+                <div className="p-6 space-y-3">
+                  <div className="h-3 bg-white/5 rounded w-1/3" />
+                  <div className="h-4 bg-white/5 rounded w-3/4" />
+                  <div className="h-3 bg-white/5 rounded w-full" />
+                  <div className="h-3 bg-white/5 rounded w-5/6" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : posts.length === 0 ? (
           <div className="text-center py-24">
             <p className="text-6xl mb-6">✍️</p>
             <p className="text-gray-500 text-lg">
