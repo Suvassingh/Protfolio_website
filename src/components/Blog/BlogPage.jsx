@@ -1,586 +1,379 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>WebRTC: The Technology Powering Real-Time Web Communication</title>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+// src/pages/BlogPage.jsx
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { collection, query, where, orderBy, getDocs, getDoc, doc } from "firebase/firestore";
+import { db } from "../../firebase";
 
-  :root {
-    --ink: #1a1a18;
-    --muted: #5a5a56;
-    --faint: #e8e6df;
-    --accent: #0f6e56;
-    --accent-light: #e1f5ee;
-    --accent-mid: #1d9e75;
-    --warm: #ba7517;
-    --warm-light: #faeeda;
-    --coral: #993c1d;
-    --coral-light: #faece7;
-    --surface: #faf9f6;
-    --card: #ffffff;
-    --border: rgba(0,0,0,0.08);
-  }
+const BlogPage = () => {
+  const [posts, setPosts] = useState([]);
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  body {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 17px;
-    line-height: 1.7;
-    color: var(--ink);
-    background: var(--surface);
-  }
+  // Fetch all published posts
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const q = query(
+          collection(db, "posts"),
+          where("published", "==", true),
+          orderBy("createdAt", "desc")
+        );
+        const snapshot = await getDocs(q);
+        const fetched = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+          createdAt: doc.data().createdAt?.toMillis?.() ?? doc.data().createdAt,
+        }));
+        setPosts(fetched);
+      } catch (err) {
+        console.error("Failed to fetch posts:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPosts();
+  }, []);
 
-  /* fluid container – works on both mobile and desktop */
-  .container {
-    width: 100%;
-    max-width: 780px;
-    margin: 0 auto;
-    padding: 0 clamp(1rem, 5vw, 2rem);
-  }
-
-  /* HERO – fully responsive */
-  .hero {
-    background: #0a3d2b;
-    color: #e1f5ee;
-    padding: clamp(3rem, 10vw, 5rem) clamp(1rem, 5vw, 2rem) clamp(3rem, 8vw, 4rem);
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-  }
-  .hero::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 39px,
-      rgba(255,255,255,0.03) 39px,
-      rgba(255,255,255,0.03) 40px
-    ),
-    repeating-linear-gradient(
-      90deg,
-      transparent,
-      transparent 79px,
-      rgba(255,255,255,0.03) 79px,
-      rgba(255,255,255,0.03) 80px
-    );
-    pointer-events: none;
-  }
-  .hero-eyebrow {
-    font-size: clamp(0.7rem, 3vw, 0.8rem);
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: #9fe1cb;
-    margin-bottom: 1rem;
-    position: relative;
-  }
-  .hero h1 {
-    font-family: 'Fraunces', serif;
-    font-size: clamp(1.8rem, 6vw, 3.8rem);
-    font-weight: 600;
-    line-height: 1.2;
-    color: #ffffff;
-    max-width: 800px;
-    margin: 0 auto 1rem;
-  }
-  .hero-sub {
-    font-size: clamp(0.9rem, 3.5vw, 1.05rem);
-    color: #9fe1cb;
-    max-width: 560px;
-    margin: 0 auto 1.8rem;
-  }
-  .hero-meta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 0.8rem 1.2rem;
-    font-size: clamp(0.7rem, 3vw, 0.8rem);
-    color: #5dcaa5;
-  }
-  .hero-meta span { display: inline-flex; align-items: center; gap: 5px; }
-
-  /* article layout */
-  .article-body {
-    padding: 2.5rem 0 3rem;
-  }
-
-  .lead {
-    font-family: 'Fraunces', serif;
-    font-size: clamp(1.1rem, 4vw, 1.3rem);
-    font-weight: 300;
-    font-style: italic;
-    color: var(--muted);
-    border-left: 3px solid var(--accent-mid);
-    padding-left: 1.2rem;
-    margin-bottom: 2rem;
-  }
-
-  h2 {
-    font-family: 'Fraunces', serif;
-    font-size: clamp(1.6rem, 5vw, 1.85rem);
-    font-weight: 600;
-    margin: 2.5rem 0 1rem;
-    line-height: 1.25;
-  }
-
-  h3 {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 1rem;
-    font-weight: 500;
-    margin: 1.5rem 0 0.5rem;
-  }
-
-  p { margin-bottom: 1.2rem; color: #2c2c28; }
-
-  /* tables – scrollable on mobile, normal on desktop */
-  .compare-wrapper {
-    overflow-x: auto;
-    margin: 2rem 0;
-    border-radius: 10px;
-    border: 1px solid var(--faint);
-  }
-  .compare {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
-    background: var(--card);
-    min-width: 500px;
-  }
-  .compare th {
-    background: #0a3d2b;
-    color: #9fe1cb;
-    text-align: left;
-    padding: 12px 14px;
-    font-weight: 500;
-  }
-  .compare td {
-    padding: 10px 14px;
-    border-top: 1px solid var(--faint);
-    vertical-align: top;
-  }
-  .compare tr:hover td { background: #f7f6f1; }
-
-  /* cards grid */
-  .cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 1rem;
-    margin: 1.5rem 0;
-  }
-  .card {
-    background: var(--card);
-    border: 1px solid var(--faint);
-    border-radius: 12px;
-    padding: 1rem;
-  }
-  .card-icon { font-size: 1.8rem; margin-bottom: 0.5rem; }
-  .card h4 { font-size: 1rem; margin-bottom: 0.25rem; }
-  .card p { font-size: 0.85rem; margin: 0; }
-
-  /* pills */
-  .pills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.6rem;
-    margin: 1rem 0 1.5rem;
-  }
-  .pill {
-    padding: 0.3rem 1rem;
-    border-radius: 100px;
-    font-size: 0.8rem;
-    font-weight: 500;
-  }
-  .pill-green { background: var(--accent-light); color: var(--accent); }
-  .pill-amber { background: var(--warm-light); color: var(--warm); }
-  .pill-coral { background: var(--coral-light); color: var(--coral); }
-
-  /* flow diagram */
-  .flow {
-    background: var(--card);
-    border: 1px solid var(--faint);
-    border-radius: 16px;
-    padding: 1.5rem;
-    margin: 1.8rem 0;
-  }
-  .flow-title {
-    font-size: 0.75rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 1rem;
-  }
-  .flow-step {
-    display: flex;
-    gap: 1rem;
-    align-items: flex-start;
-  }
-  .flow-connector {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    flex-shrink: 0;
-  }
-  .flow-dot {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: var(--accent);
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.8rem;
-    font-weight: 500;
-  }
-  .flow-line {
-    width: 2px;
-    height: 26px;
-    background: var(--faint);
-    margin: 4px 0;
-  }
-  .flow-content {
-    padding-top: 4px;
-    padding-bottom: 1rem;
-  }
-  .flow-content strong {
-    display: block;
-    font-size: 0.9rem;
-    margin-bottom: 2px;
-  }
-  .flow-content span {
-    font-size: 0.85rem;
-    color: var(--muted);
-    line-height: 1.4;
-  }
-
-  /* code block */
-  .code-block {
-    background: #0f1a14;
-    border-radius: 12px;
-    padding: 1rem;
-    overflow-x: auto;
-    margin: 1.8rem 0;
-  }
-  .code-block pre {
-    font-family: 'Courier New', monospace;
-    font-size: 0.8rem;
-    line-height: 1.5;
-    color: #9fe1cb;
-    margin: 0;
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-  @media (min-width: 540px) {
-    .code-block pre {
-      white-space: pre;
-      word-break: normal;
+  // Load single post from URL query param ?post=ID
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const postId = params.get("post");
+    if (postId && posts.length > 0) {
+      const found = posts.find((p) => p.id === postId);
+      if (found) {
+        setSelectedPost(found);
+      } else {
+        // Direct link to unpublished or not yet loaded
+        const fetchSingle = async () => {
+          const postRef = doc(db, "posts", postId);
+          const snap = await getDoc(postRef);
+          if (snap.exists() && snap.data().published) {
+            setSelectedPost({ id: snap.id, ...snap.data() });
+          }
+        };
+        fetchSingle();
+      }
+    } else {
+      setSelectedPost(null);
     }
-  }
-  .kw { color: #5dcaa5; }
-  .cm { color: #4a7a62; font-style: italic; }
-  .st { color: #fac775; }
+  }, [location.search, posts]);
 
-  blockquote {
-    font-family: 'Fraunces', serif;
-    font-size: clamp(1rem, 4vw, 1.15rem);
-    font-style: italic;
-    color: var(--muted);
-    border-left: 3px solid var(--accent-mid);
-    padding-left: 1.2rem;
-    margin: 2rem 0;
-  }
+  // Helpers
+  const formatDate = (ts) =>
+    new Date(ts).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
 
-  .callout {
-    border-radius: 12px;
-    padding: 1rem 1.2rem;
-    margin: 1.8rem 0;
-  }
-  .callout p {
-    margin: 0;
-    font-size: 0.9rem;
-  }
-  .callout-green { background: var(--accent-light); border-left: 4px solid var(--accent-mid); }
-  .callout-amber { background: var(--warm-light); border-left: 4px solid var(--warm); }
-  .callout-coral { background: var(--coral-light); border-left: 4px solid var(--coral); }
-  .callout-label {
-    font-size: 0.7rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    font-weight: 500;
-    margin-bottom: 0.4rem;
-  }
+  const readTime = (html) => {
+    const text = html.replace(/<[^>]+>/g, "");
+    const words = text.trim().split(/\s+/).length;
+    return Math.max(1, Math.ceil(words / 200));
+  };
 
-  .conclusion {
-    background: #0a3d2b;
-    border-radius: 18px;
-    padding: 1.8rem;
-    margin: 2.5rem 0;
-    color: #e1f5ee;
-  }
-  .conclusion h2 {
-    color: #ffffff;
-    font-size: clamp(1.4rem, 5vw, 1.6rem);
-    margin-top: 0;
-  }
-  .conclusion p {
-    color: #9fe1cb;
-    margin-bottom: 1rem;
-  }
+  const excerpt = (html) => {
+    const text = html.replace(/<[^>]+>/g, "");
+    return text.slice(0, 160) + (text.length > 160 ? "…" : "");
+  };
 
-  hr.divider {
-    border: none;
-    border-top: 1px solid var(--faint);
-    margin: 2rem 0;
-  }
+  // Share helpers
+  const getShareUrl = () => {
+    const base = window.location.origin + window.location.pathname;
+    return `${base}?post=${selectedPost.id}`;
+  };
 
-  .footer {
-    border-top: 1px solid var(--faint);
-    padding: 2rem 0;
-    text-align: center;
-    font-size: 0.8rem;
-    color: var(--muted);
-  }
+  const shareOnTwitter = () => {
+    const url = getShareUrl();
+    const text = `Check out "${selectedPost.title}" by Subhash Singh`;
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, "_blank");
+  };
 
-  /* extra small devices */
-  @media (max-width: 540px) {
-    body { font-size: 16px; }
-    .flow-step { gap: 0.8rem; }
-    .flow-dot { width: 28px; height: 28px; font-size: 0.7rem; }
-    .flow-content strong { font-size: 0.85rem; }
-    .flow-content span { font-size: 0.8rem; }
-    .cards { grid-template-columns: 1fr; }
-    .hero-meta span { font-size: 0.7rem; }
-  }
-</style>
-</head>
-<body>
+  const shareOnLinkedIn = () => {
+    const url = getShareUrl();
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, "_blank");
+  };
 
-<header class="hero">
-  <p class="hero-eyebrow">Deep Dive · Web Technology</p>
-  <h1>WebRTC: The Engine Behind Real-Time Web Communication</h1>
-  <p class="hero-sub">How browsers became powerful communication platforms — without a single plugin</p>
-  <div class="hero-meta">
-    <span>📅 June 2026</span>
-    <span>·</span>
-    <span>⏱ 8 min read</span>
-    <span>·</span>
-    <span>🌐 Technology</span>
-  </div>
-</header>
+  const shareOnFacebook = () => {
+    const url = getShareUrl();
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, "_blank");
+  };
 
-<main class="article-body">
-  <div class="container">
-    <p class="lead">
-      Imagine opening a browser tab and instantly video-calling someone on the other side of the world — no downloads, no plugins, no middleman server relaying your voice. That's exactly what WebRTC makes possible, and it's quietly powering some of the most critical applications of the modern web.
-    </p>
+  const shareOnWhatsApp = () => {
+    const url = getShareUrl();
+    const text = `${selectedPost.title} - ${url}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+  };
 
-    <h2>What Is WebRTC?</h2>
-    <p><strong>WebRTC</strong> — Web Real-Time Communication — is a royalty-free, open-source protocol suite that enables peer-to-peer audio, video, and data streaming directly between browsers and devices, without any plugins or intermediary software. It was standardized by the W3C and IETF, and today runs natively in Chrome, Firefox, Safari, Edge, and Opera.</p>
-    <p>In practical terms: when you join a Google Meet call from a browser tab without installing anything, that's WebRTC at work. When you share your screen in Microsoft Teams on the web, that's WebRTC. When Discord streams audio in real time — again, WebRTC.</p>
+  const copyLink = async () => {
+    const url = getShareUrl();
+    await navigator.clipboard.writeText(url);
+    alert("Link copied to clipboard!");
+  };
 
-    <div class="callout callout-green">
-      <div class="callout-label">Key fact</div>
-      <p>WebRTC achieves sub-500 millisecond glass-to-glass latency — meaning the delay between you speaking and the other person hearing you is imperceptible to the human brain. Some implementations hit sub-250ms, effectively making it real-time.</p>
-    </div>
-
-    <h2>Before WebRTC: A World of Friction</h2>
-    <p>Before WebRTC arrived (Google open-sourced it in 2011), real-time communication in browsers required Flash, Silverlight, or proprietary plugins — each with licensing costs, security risks, and the dreaded "you need to install this first" friction. WebRTC changed everything by embedding communication directly into the browser runtime through three JavaScript APIs:</p>
-
-    <div class="pills">
-      <span class="pill pill-green">getUserMedia() — captures camera & mic</span>
-      <span class="pill pill-amber">RTCPeerConnection — manages the connection</span>
-      <span class="pill pill-coral">RTCDataChannel — handles arbitrary data</span>
-    </div>
-
-    <h2>How Does WebRTC Actually Work?</h2>
-    <p>WebRTC's architecture is elegant but involves several interconnected components. At its heart is a <strong>peer-to-peer</strong> model — but establishing that direct connection requires a carefully orchestrated handshake. Here's the full connection lifecycle:</p>
-
-    <!-- FLOW DIAGRAM -->
-    <div class="flow">
-      <div class="flow-title">WebRTC Connection Lifecycle</div>
-      <div class="flow-steps">
-        <div class="flow-step">
-          <div class="flow-connector">
-            <div class="flow-dot">1</div>
-            <div class="flow-line"></div>
+  // Single post view (with share buttons)
+  if (selectedPost) {
+    // Full custom layout – render raw HTML without extra chrome
+    if (selectedPost.fullCustomLayout) {
+      return (
+        <div className="min-h-screen">
+          <div className="sticky top-0 z-50 bg-white/80 dark:bg-[#050414]/80 backdrop-blur-md border-b border-gray-200 dark:border-white/5 px-4 py-3">
+            <button
+              onClick={() => {
+                setSelectedPost(null);
+                navigate("/blog");
+              }}
+              className="text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 text-sm font-medium"
+            >
+              ← Back to Blog
+            </button>
           </div>
-          <div class="flow-content">
-            <strong>Media preparation</strong>
-            <span>Both peers access local cameras and microphones via <code>getUserMedia()</code> and attach media tracks to an <code>RTCPeerConnection</code> object.</span>
-          </div>
+          <div dangerouslySetInnerHTML={{ __html: selectedPost.content }} />
         </div>
-        <div class="flow-step">
-          <div class="flow-connector">
-            <div class="flow-dot">2</div>
-            <div class="flow-line"></div>
-          </div>
-          <div class="flow-content">
-            <strong>SDP Offer — "here's what I can do"</strong>
-            <span>Peer A creates an SDP offer describing its codecs, media types, and network capabilities. Think of SDP as two people deciding which language to speak before the conversation begins.</span>
-          </div>
+      );
+    }
+
+    // Default blog layout with share buttons
+    return (
+      <div className="min-h-screen bg-[#050414] text-white font-sans">
+        <div className="sticky top-0 z-50 bg-[#050414]/80 backdrop-blur-md border-b border-white/5 px-[7vw] md:px-[20vw] py-4 flex items-center justify-between">
+          <button
+            onClick={() => {
+              setSelectedPost(null);
+              navigate("/blog");
+            }}
+            className="flex items-center gap-2 text-purple-400 hover:text-purple-300 text-sm font-medium transition-colors"
+          >
+            ← Back to Blog
+          </button>
+          <button
+            onClick={() => navigate("/blog/login")}
+            className="text-xs text-gray-600 hover:text-gray-400 transition-colors"
+          >
+            Admin
+          </button>
         </div>
-        <div class="flow-step">
-          <div class="flow-connector">
-            <div class="flow-dot">3</div>
-            <div class="flow-line"></div>
+
+        <article className="px-[7vw] md:px-[20vw] py-16 max-w-4xl mx-auto">
+          {selectedPost.coverImageUrl && (
+            <img
+              src={selectedPost.coverImageUrl}
+              alt={selectedPost.title}
+              className="w-full max-h-96 object-cover rounded-2xl mb-10 shadow-[0_0_40px_rgba(130,69,236,0.2)]"
+            />
+          )}
+          <div className="flex items-center gap-3 mb-6 flex-wrap">
+            <span className="text-xs text-purple-400 bg-purple-500/10 border border-purple-500/20 px-3 py-1 rounded-full">
+              {selectedPost.category || "Blog"}
+            </span>
+            <span className="text-xs text-gray-500">
+              {formatDate(selectedPost.createdAt)}
+            </span>
+            <span className="text-xs text-gray-500">
+              · {readTime(selectedPost.content)} min read
+            </span>
           </div>
-          <div class="flow-content">
-            <strong>SDP Answer — "here's what I can do back"</strong>
-            <span>Peer B receives the offer, creates an SDP answer, and the two sides agree on shared parameters. Only then does media start flowing.</span>
+
+          <h1
+            className="text-3xl md:text-5xl font-bold text-white leading-tight mb-6"
+            style={{ fontFamily: "'Syne', sans-serif" }}
+          >
+            {selectedPost.title}
+          </h1>
+
+          <div className="flex items-center justify-between flex-wrap gap-4 mb-12 pb-8 border-b border-white/5">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-purple-700 flex items-center justify-center text-sm font-bold">
+                S
+              </div>
+              <div>
+                <p className="text-sm font-medium text-white">Subhash Singh</p>
+                <p className="text-xs text-gray-500">Author</p>
+              </div>
+            </div>
+
+            {/* Social Share Buttons */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500 mr-1">Share:</span>
+              <button
+                onClick={shareOnTwitter}
+                className="p-2 rounded-full bg-gray-800 hover:bg-[#1DA1F2] transition-colors"
+                aria-label="Share on Twitter"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                </svg>
+              </button>
+              <button
+                onClick={shareOnLinkedIn}
+                className="p-2 rounded-full bg-gray-800 hover:bg-[#0077B5] transition-colors"
+                aria-label="Share on LinkedIn"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452z" />
+                </svg>
+              </button>
+              <button
+                onClick={shareOnFacebook}
+                className="p-2 rounded-full bg-gray-800 hover:bg-[#1877F2] transition-colors"
+                aria-label="Share on Facebook"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M22.675 0h-21.35C.591 0 0 .592 0 1.325v21.351C0 23.408.592 24 1.325 24H12.82v-9.294H9.692v-3.622h3.128V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12V24h6.116c.733 0 1.325-.592 1.325-1.325V1.325C24 .592 23.408 0 22.675 0z" />
+                </svg>
+              </button>
+              <button
+                onClick={shareOnWhatsApp}
+                className="p-2 rounded-full bg-gray-800 hover:bg-[#25D366] transition-colors"
+                aria-label="Share on WhatsApp"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12.032 2.002c-5.523 0-10 4.476-10 10 0 1.79.476 3.547 1.38 5.088L2 22l5.074-1.348c1.484.825 3.168 1.26 4.958 1.26 5.523 0 10-4.476 10-10s-4.477-10-10-10zm.032 18.346c-1.516 0-3.002-.412-4.284-1.188l-.307-.182-3.064.814.815-2.994-.2-.317c-.867-1.37-1.324-2.94-1.324-4.573 0-4.605 3.747-8.352 8.354-8.352 4.606 0 8.352 3.747 8.352 8.352 0 4.606-3.746 8.354-8.352 8.354zm4.575-6.254c-.252-.126-1.49-.736-1.72-.82-.23-.084-.397-.126-.564.126-.167.252-.647.82-.793.988-.146.168-.292.189-.544.063-.252-.126-1.063-.392-2.025-1.252-.748-.668-1.254-1.495-1.4-1.748-.147-.252-.015-.388.11-.514.112-.112.252-.294.378-.44.126-.147.168-.252.252-.42.084-.168.042-.315-.021-.44-.063-.126-.564-1.36-.773-1.862-.203-.49-.409-.423-.564-.432-.147 0-.315-.008-.483-.008-.168 0-.44.063-.67.315-.23.252-.878.856-.878 2.09 0 1.233.898 2.424 1.023 2.592.126.168 1.764 2.698 4.274 3.78.598.258 1.065.413 1.43.53.6.191 1.147.164 1.578.099.482-.074 1.49-.608 1.699-1.195.21-.587.21-1.09.147-1.195-.063-.105-.23-.168-.482-.294z" />
+                </svg>
+              </button>
+              <button
+                onClick={copyLink}
+                className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 transition-colors"
+                aria-label="Copy link"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              </button>
+            </div>
           </div>
-        </div>
-        <div class="flow-step">
-          <div class="flow-connector">
-            <div class="flow-dot">4</div>
-            <div class="flow-line"></div>
+
+          <div
+            className="blog-content"
+            dangerouslySetInnerHTML={{ __html: selectedPost.content }}
+          />
+        </article>
+
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&display=swap');
+          .blog-content { color: #d1d5db; line-height: 1.85; font-size: 1.05rem; }
+          .blog-content h1, .blog-content h2, .blog-content h3 { color: #fff; font-family: 'Syne', sans-serif; margin: 2rem 0 1rem; }
+          .blog-content h1 { font-size: 2rem; }
+          .blog-content h2 { font-size: 1.5rem; }
+          .blog-content h3 { font-size: 1.25rem; }
+          .blog-content p { margin-bottom: 1.25rem; }
+          .blog-content img { max-width: 100%; border-radius: 12px; margin: 1.5rem 0; box-shadow: 0 0 30px rgba(130,69,236,0.15); }
+          .blog-content ul, .blog-content ol { padding-left: 1.5rem; margin-bottom: 1.25rem; }
+          .blog-content li { margin-bottom: 0.5rem; }
+          .blog-content blockquote { border-left: 3px solid #8245ec; padding-left: 1rem; color: #9ca3af; font-style: italic; margin: 1.5rem 0; }
+          .blog-content strong { color: #e5e7eb; }
+          .blog-content a { color: #a855f7; text-decoration: underline; }
+          .blog-content pre { background: #0d0820; border: 1px solid rgba(130,69,236,0.2); border-radius: 8px; padding: 1rem; overflow-x: auto; margin: 1.5rem 0; }
+          .blog-content code { font-family: monospace; font-size: 0.9em; background: rgba(130,69,236,0.1); padding: 2px 6px; border-radius: 4px; }
+        `}</style>
+      </div>
+    );
+  }
+
+  // Posts feed (list view)
+  return (
+    <div className="min-h-screen bg-[#050414] text-white font-sans">
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&display=swap');`}</style>
+      <div className="sticky top-0 z-50 bg-[#050414]/80 backdrop-blur-md border-b border-white/5 px-[7vw] md:px-[20vw] py-4 flex items-center justify-between">
+        <button
+          onClick={() => navigate("/")}
+          className="flex items-center gap-2 text-purple-400 hover:text-purple-300 text-sm font-medium transition-colors"
+        >
+          ← Back to Portfolio
+        </button>
+        <button
+          onClick={() => navigate("/blog/login")}
+          className="text-xs text-gray-600 hover:text-gray-400 transition-colors"
+        >
+          Admin
+        </button>
+      </div>
+
+      <div className="px-[7vw] md:px-[20vw] pt-20 pb-16 text-center">
+        <p className="text-xs tracking-widest text-purple-400 uppercase mb-4">
+          Thoughts &amp; Writings
+        </p>
+        <h1
+          className="text-5xl md:text-7xl font-bold text-white"
+          style={{ fontFamily: "'Syne', sans-serif" }}
+        >
+          The Blog
+        </h1>
+        <p className="text-gray-400 mt-4 text-lg max-w-xl mx-auto">
+          Ideas, tutorials, and stories from my journey in tech.
+        </p>
+      </div>
+
+      <div className="px-[7vw] md:px-[20vw] pb-24">
+        {loading ? (
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="bg-gray-900/50 border border-white/5 rounded-2xl overflow-hidden animate-pulse">
+                <div className="w-full h-48 bg-white/5" />
+                <div className="p-6 space-y-3">
+                  <div className="h-3 bg-white/5 rounded w-1/3" />
+                  <div className="h-4 bg-white/5 rounded w-3/4" />
+                  <div className="h-3 bg-white/5 rounded w-full" />
+                  <div className="h-3 bg-white/5 rounded w-5/6" />
+                </div>
+              </div>
+            ))}
           </div>
-          <div class="flow-content">
-            <strong>ICE Candidate Exchange</strong>
-            <span>Both sides gather ICE candidates — possible network paths including local addresses, public IPs from STUN servers, and TURN relay addresses. These are exchanged via a signaling channel.</span>
+        ) : posts.length === 0 ? (
+          <div className="text-center py-24">
+            <p className="text-6xl mb-6">✍️</p>
+            <p className="text-gray-500 text-lg">No posts yet. Check back soon!</p>
           </div>
-        </div>
-        <div class="flow-step">
-          <div class="flow-connector">
-            <div class="flow-dot">5</div>
+        ) : (
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {posts.map((post) => (
+              <article
+                key={post.id}
+                onClick={() => navigate(`/blog?post=${post.id}`)}
+                className="group bg-gray-900/50 border border-white/5 rounded-2xl overflow-hidden cursor-pointer hover:border-purple-500/30 hover:-translate-y-1 transition-all duration-300"
+              >
+                {post.coverImageUrl ? (
+                  <img
+                    src={post.coverImageUrl}
+                    alt={post.title}
+                    className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                ) : (
+                  <div className="w-full h-48 bg-gradient-to-br from-purple-900/40 to-[#0d0820] flex items-center justify-center text-4xl">
+                    📝
+                  </div>
+                )}
+                <div className="p-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-xs text-purple-400 bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-full">
+                      {post.category || "Blog"}
+                    </span>
+                    <span className="text-xs text-gray-600">
+                      {readTime(post.content)} min read
+                    </span>
+                  </div>
+                  <h2
+                    className="text-lg font-bold text-white mb-2 group-hover:text-purple-300 transition-colors line-clamp-2"
+                    style={{ fontFamily: "'Syne', sans-serif" }}
+                  >
+                    {post.title}
+                  </h2>
+                  <p className="text-sm text-gray-500 line-clamp-3 mb-4">
+                    {excerpt(post.content)}
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    {formatDate(post.createdAt)}
+                  </p>
+                </div>
+              </article>
+            ))}
           </div>
-          <div class="flow-content">
-            <strong>Direct P2P connection established</strong>
-            <span>ICE picks the best available path. The signaling server's job ends. Media and data flow directly peer-to-peer, encrypted with DTLS-SRTP.</span>
-          </div>
-        </div>
+        )}
       </div>
     </div>
-
-    <h2>The Three Pillars: Signaling, STUN, and TURN</h2>
-    <p>WebRTC itself handles everything once a connection is established — but it deliberately leaves the initial handshake up to you. This is where three external helpers come in:</p>
-
-    <h3>Signaling Server</h3>
-    <p>WebRTC has no built-in signaling — it can't establish a peer-to-peer connection on its own. A signaling server acts as the matchmaker: it exchanges SDP offers, answers, and ICE candidates between peers before the direct connection forms. The transport mechanism is entirely your choice — WebSocket, HTTP, even an email or a tweet would technically work. Once the peers connect, the signaling server is no longer involved.</p>
-
-    <h3>STUN Server</h3>
-    <p>Most devices sit behind a NAT (Network Address Translation) — they have a private IP that the outside world can't reach directly. A STUN server tells each peer its public-facing IP address and port, information it cannot determine on its own. This public address is included in the ICE candidate list for potential connection paths.</p>
-
-    <h3>TURN Server</h3>
-    <p>When direct peer-to-peer connectivity fails — particularly with symmetric NATs or restrictive firewalls — a TURN server steps in as a relay, forwarding media between peers who can't connect directly. TURN is the fallback that ensures WebRTC works even in the most restrictive network environments.</p>
-
-    <div class="callout callout-amber">
-      <div class="callout-label">Architecture note</div>
-      <p>Most WebRTC deployments need both: STUN handles the majority of connections cheaply (it only reflects your IP), while TURN is the reliable fallback for the ~15–20% of connections where direct P2P fails. TURN relays media traffic, so it's resource-intensive and typically requires a dedicated server.</p>
-    </div>
-
-    <h2>WebRTC vs WebSockets: Know the Difference</h2>
-    <p>This is one of the most common points of confusion for developers new to WebRTC. They both enable real-time data exchange — but they're built for fundamentally different scenarios.</p>
-
-    <div class="compare-wrapper">
-      <table class="compare">
-        <thead>
-          <tr><th>Aspect</th><th>WebRTC</th><th>WebSockets</th></tr>
-        </thead>
-        <tbody>
-          <tr><td><strong>Connection model</strong></td><td>Peer-to-peer (direct)</td><td>Client–server</td></tr>
-          <tr><td><strong>Transport protocol</strong></td><td>UDP (fast, lower overhead)</td><td>TCP (reliable, ordered)</td></tr>
-          <tr><td><strong>Latency</strong></td><td>Sub-500ms, often sub-250ms</td><td>Low, but routes through server</td></tr>
-          <tr><td><strong>Media support</strong></td><td>Native audio/video streaming</td><td>Data only (no built-in media)</td></tr>
-          <tr><td><strong>Server required?</strong></td><td>Only for signaling (initially)</td><td>Always (all data routes through it)</td></tr>
-          <tr><td><strong>Best for</strong></td><td>Video calls, live streams, gaming</td><td>Chat, notifications, live dashboards</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <p>WebRTC uses UDP — which is fast but doesn't guarantee delivery. For a video call, a dropped frame is far better than a frozen one; the slight degradation is imperceptible and the stream catches up instantly. WebSockets use TCP, which guarantees ordered delivery but adds latency through acknowledgment packets. Neither is universally better — they solve different problems.</p>
-
-    <h2>A Minimal WebRTC Example</h2>
-    <p>Here's the essential code to create a peer connection and handle an ICE candidate — the core of any WebRTC application:</p>
-
-    <div class="code-block"><pre><span class="cm">// Create the peer connection with STUN server fallback</span>
-<span class="kw">const</span> config = {
-  iceServers: [{ urls: <span class="st">'stun:stun.l.google.com:19302'</span> }]
-};
-<span class="kw">const</span> pc = <span class="kw">new</span> RTCPeerConnection(config);
-
-<span class="cm">// Add local media tracks to the connection</span>
-<span class="kw">const</span> stream = <span class="kw">await</span> navigator.mediaDevices.getUserMedia({
-  video: <span class="kw">true</span>, audio: <span class="kw">true</span>
-});
-stream.getTracks().forEach(track => pc.addTrack(track, stream));
-
-<span class="cm">// Send ICE candidates to the remote peer via your signaling server</span>
-pc.onicecandidate = ({ candidate }) => {
-  <span class="kw">if</span> (candidate) signalingServer.send(candidate);
+  );
 };
 
-<span class="cm">// Create an offer and set it as the local description</span>
-<span class="kw">const</span> offer = <span class="kw">await</span> pc.createOffer();
-<span class="kw">await</span> pc.setLocalDescription(offer);
-signalingServer.send(offer); <span class="cm">// Send offer to remote peer</span></pre></div>
-
-    <h2>Where WebRTC Powers the Real World</h2>
-    <p>WebRTC is no longer just a "video calls" technology. In 2026, it powers a surprising breadth of applications:</p>
-
-    <div class="cards">
-      <div class="card"><div class="card-icon">🎥</div><h4>Video Conferencing</h4><p>Google Meet, Microsoft Teams, and Zoom's browser client all rely on WebRTC for in-browser calls.</p></div>
-      <div class="card"><div class="card-icon">🏥</div><h4>Telehealth</h4><p>HIPAA-compliant virtual consultations where patients connect directly with doctors, no app needed.</p></div>
-      <div class="card"><div class="card-icon">🎮</div><h4>Gaming & Esports</h4><p>Ultra-low latency voice chat and real-time game state sync between players worldwide.</p></div>
-      <div class="card"><div class="card-icon">📡</div><h4>Live Broadcasting</h4><p>Real-time sports, concerts, and interactive shows with sub-second latency for live interaction.</p></div>
-      <div class="card"><div class="card-icon">🔒</div><h4>IP Camera Streams</h4><p>Brands like Ring, Nest, and Arlo use WebRTC to stream real-time security feeds to phones.</p></div>
-      <div class="card"><div class="card-icon">🛒</div><h4>Live Commerce</h4><p>Interactive shopping events where hosts demo products and viewers bid or buy in real time.</p></div>
-    </div>
-
-    <div class="callout callout-green">
-      <div class="callout-label">2026 Trend</div>
-      <p>WebRTC is rapidly expanding into IoT — an estimated 18 billion IoT devices are online, and smart cameras, thermostats, industrial sensors, and even agricultural equipment are adopting it as the real-time communication protocol of choice. The AR/VR space is also leaning on WebRTC as the invisible infrastructure for spatial computing applications.</p>
-    </div>
-
-    <h2>Security: Built-In, Not Bolted On</h2>
-    <p>One of WebRTC's most underappreciated strengths is its security model. All WebRTC streams are encrypted by default using <strong>DTLS-SRTP</strong> (Datagram Transport Layer Security for Secure Real-time Transport Protocol). Unlike older streaming solutions where encryption was optional, WebRTC makes it mandatory — you cannot create an unencrypted WebRTC connection.</p>
-    <p>Browsers also enforce explicit user permission for camera and microphone access. No website can silently activate your webcam — the user must grant permission, and that permission state is clearly visible in the browser UI at all times.</p>
-
-    <blockquote>
-      "WebRTC's mandatory encryption and explicit permission model set a new standard for how real-time media should be handled on the web. Security isn't a feature — it's the foundation."
-    </blockquote>
-
-    <h2>The Honest Challenges</h2>
-    <p>WebRTC is powerful, but it isn't simple. Modern production applications face real complexity:</p>
-
-    <div class="callout callout-coral">
-      <div class="callout-label">Complexity warning</div>
-      <p>Scaling WebRTC beyond one-to-one calls requires Selective Forwarding Units (SFUs) or Multipoint Conferencing Units (MCUs) — server-side media infrastructure that adds significant architectural complexity. Most real-world apps also need recording, transcription, AI integration, compliance logging, and SIP telephony — each layer multiplying the challenge.</p>
-    </div>
-
-    <p>NAT traversal remains the thorniest problem. While STUN resolves most cases, symmetric NATs (common in corporate networks) force traffic through TURN servers, which are bandwidth-intensive and expensive to operate at scale. Network conditions also vary wildly, requiring adaptive bitrate streaming and sophisticated packet loss handling to maintain quality.</p>
-    <p>Despite all this, the WebRTC ecosystem has matured significantly. Libraries like <strong>simple-peer</strong>, platforms like <strong>Twilio</strong> and <strong>Daily.co</strong>, and open-source media servers like <strong>Janus</strong> and <strong>Mediasoup</strong> absorb much of this complexity, letting developers focus on their applications rather than the protocol internals.</p>
-
-    <h2>Is WebRTC Still Relevant in 2026?</h2>
-    <p>Absolutely. WebRTC is actively maintained by W3C and IETF, and all major browsers and mobile platforms support it natively. Emerging protocols like <strong>Media over QUIC (MoQ)</strong> are designed for large-scale delivery scenarios, not to replace WebRTC's core peer-to-peer use cases.</p>
-    <p>The real story of 2026 is how WebRTC is evolving beyond the browser. Native mobile SDKs, server-side implementations, and IoT integrations have expanded WebRTC far beyond its browser origins. It's now the foundational protocol for real-time communication across the entire digital ecosystem.</p>
-
-    <!-- CONCLUSION -->
-    <div class="conclusion">
-      <h2>The Bottom Line</h2>
-      <p>WebRTC is one of those technologies that most people use every day without knowing its name. It's in every browser tab running a video call, every IoT camera streaming to a phone, every live auction where a bid lands in real time.</p>
-      <p>Its three-pronged API — <code>getUserMedia</code>, <code>RTCPeerConnection</code>, and <code>RTCDataChannel</code> — gives developers the full toolkit to build real-time experiences without plugins, without middlemen, and without compromise on security.</p>
-      <p>Understanding WebRTC means understanding how the real-time web works. And in 2026, the real-time web is simply the web.</p>
-    </div>
-
-    <hr class="divider" />
-    <p style="font-size: 14px; color: var(--muted);">
-      <strong>Further reading:</strong>
-      <a href="https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API" target="_blank">MDN WebRTC API docs</a> ·
-      <a href="https://webrtc.org" target="_blank">WebRTC.org</a> ·
-      <a href="https://antmedia.io/what-is-webrtc-and-how-webrtc-works/" target="_blank">Ant Media WebRTC guide</a>
-    </p>
-  </div>
-</main>
-
-<footer class="footer">
-  <div class="container">
-    <p>Written with insights from WebRTC specifications, MDN Web Docs, and current industry sources · June 2026</p>
-  </div>
-</footer>
-
-</body>
-</html>
+export default BlogPage;
