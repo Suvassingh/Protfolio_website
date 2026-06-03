@@ -274,7 +274,7 @@ const BlogPage = () => {
 
   // Posts feed (list view)
   return (
-    <div className="min-h-screen bg-[#050414] text-white font-sans">
+    <div className="min-h-screen bg-white text-gray-900 font-sans">
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&display=swap');`}</style>
       <div className="sticky top-0 z-50 bg-[#050414]/80 backdrop-blur-md border-b border-white/5 px-[7vw] md:px-[20vw] py-4 flex items-center justify-between">
         <button
@@ -310,7 +310,10 @@ const BlogPage = () => {
         {loading ? (
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((n) => (
-              <div key={n} className="bg-gray-900/50 border border-white/5 rounded-2xl overflow-hidden animate-pulse">
+              <div
+                key={n}
+                className="bg-gray-900/50 border border-white/5 rounded-2xl overflow-hidden animate-pulse"
+              >
                 <div className="w-full h-48 bg-white/5" />
                 <div className="p-6 space-y-3">
                   <div className="h-3 bg-white/5 rounded w-1/3" />
@@ -324,7 +327,9 @@ const BlogPage = () => {
         ) : posts.length === 0 ? (
           <div className="text-center py-24">
             <p className="text-6xl mb-6">✍️</p>
-            <p className="text-gray-500 text-lg">No posts yet. Check back soon!</p>
+            <p className="text-gray-500 text-lg">
+              No posts yet. Check back soon!
+            </p>
           </div>
         ) : (
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
