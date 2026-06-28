@@ -44,7 +44,8 @@ import eStoreLogo from './assets/project/e-store.png'
 import sewaMitraLogo from './assets/project/sewamitra.png'
 import telemedicalLogo from './assets/project/d1.png'
 import shopifyLogo from './assets/project/shopify.png'
-
+import group from "./assets/project/group.jpg";
+import certi from "./assets/project/certi.jpg";
 
 
 
@@ -136,7 +137,26 @@ export const education = [
   },
 ];
 
-
+export const experience = [
+  {
+    id: 1,
+    company: "Tech Solutions Inc.",
+    role: "Fullstack Developer Intern",
+    date: "June 2024 – Present",
+    img: eStoreLogo, // or use a logo
+    desc: "Built RESTful APIs with Node/Express and integrated with React frontend. Optimized database queries and reduced load time by 30%.",
+    tech: ["React", "Node.js", "MongoDB", "Express"],
+  },
+  {
+    id: 2,
+    company: "Freelance",
+    role: "UI/UX Designer & Developer",
+    date: "Jan 2024 – May 2024",
+    img: eStoreLogo,
+    desc: "Designed and developed responsive websites for small businesses. Implemented modern UI/UX principles and ensured cross‑browser compatibility.",
+    tech: ["Figma", "HTML/CSS", "JavaScript", "Tailwind"],
+  },
+];
 
   export const projects = [
     {
@@ -174,12 +194,14 @@ export const education = [
       description:
         "A telemedical app is a digital platform that allows patients to consult doctors and healthcare providers remotely via video, audio, or chat. It enables appointment scheduling, health record management, and real-time medical advice, making healthcare accessible and convenient from anywhere.                                It might not be available on web and mobile because of not deployed yet.And git reposirtory is private.If you want then send me the mail i will provide it to you.",
       image: telemedicalLogo,
+      images: [telemedicalLogo, group, certi],
+
       tags: ["Flutter", "Firebase", "WebRtc"],
       github: "https://github.com/Suvassingh/TelemedicalApp.git",
       webapp: "",
     },
     {
-      id: 2,
+      id: 3,
       title: "Shopify",
       description:
         "Shopify clone is an e-commerce platform that allows users to create and manage their own online stores, offering features like product listings, shopping carts, secure payments, and customizable themes for a seamless shopping experience.",

@@ -1,13 +1,13 @@
-
-// export default Navbar
 import React, { useState, useEffect } from "react";
-import { FiMenu, FiX } from "react-icons/fi";
+import { FiMenu, FiX, FiSun, FiMoon } from "react-icons/fi";
 import { FaGithub, FaLinkedin } from "react-icons/fa";
+// import { useTheme } from "../../context/ThemeContext.jsx";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
+  // const { isDark, toggleTheme } = useTheme();
 
   // Detect scroll and change navbar background
   useEffect(() => {
@@ -19,7 +19,7 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Smooth scroll function
+  // Smooth scroll to section
   const handleMenuItemClick = (sectionId) => {
     setActiveSection(sectionId);
     setIsOpen(false);
@@ -42,8 +42,8 @@ const Navbar = () => {
   return (
     <nav
       className={`fixed top-0 w-full z-50 transition duration-300 px-[7vw] md:px-[7vw] lg:px-[20vw] ${
-        isScrolled
-          ? "bg-[#050414] bg-opacity-50 backdrop-blur-md shadow-md"
+        isScrolled ?
+          "bg-[#050414] bg-opacity-50 backdrop-blur-md shadow-md"
           : "bg-transparent"
       }`}
     >
@@ -73,8 +73,8 @@ const Navbar = () => {
           ))}
         </ul>
 
-        {/* Social Icons */}
-        <div className="hidden md:flex space-x-4">
+        {/* Desktop Right Side (Socials + Theme Toggle) */}
+        <div className="hidden md:flex space-x-4 items-center">
           <a
             href="https://github.com/Suvassingh"
             target="_blank"
@@ -91,6 +91,13 @@ const Navbar = () => {
           >
             <FaLinkedin size={24} />
           </a>
+          {/* <button
+            onClick={toggleTheme}
+            className="text-gray-300 hover:text-[#8245ec] transition-colors"
+            aria-label="Toggle theme"
+          >
+            {isDark ? <FiSun size={22} /> : <FiMoon size={22} />}
+          </button> */}
         </div>
 
         {/* Mobile Menu Icon */}
@@ -109,28 +116,35 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Menu Items */}
+      {/* Mobile Menu (theme‑aware background + toggle button) */}
       {isOpen && (
-        <div className="absolute top-16 left-1/2 transform -translate-x-1/2 w-4/5 bg-[#050414] bg-opacity-50 backdrop-filter backdrop-blur-lg z-50 rounded-lg shadow-lg md:hidden">
-          <ul className="flex flex-col items-center space-y-4 py-4 text-gray-300">
+        <div
+          className={`absolute top-16 left-1/2 transform -translate-x-1/2 w-4/5 z-50 rounded-lg shadow-lg md:hidden ${
+            
+              "bg-white/80 backdrop-blur-lg"
+          }`}
+        >
+          <ul className="flex flex-col items-center space-y-4 py-4">
             {menuItems.map((item) => (
               <li
                 key={item.id}
-                className={`cursor-pointer hover:text-white ${
-                  activeSection === item.id ? "text-[#8245ec]" : ""
-                }`}
+                className={`cursor-pointer ${
+                 "text-gray-700 hover:text-gray-900"
+                } ${activeSection === item.id ? "text-[#8245ec]" : ""}`}
               >
                 <button onClick={() => handleMenuItemClick(item.id)}>
                   {item.label}
                 </button>
               </li>
             ))}
-            <div className="flex space-x-4">
+            <div className="flex items-center space-x-4 pt-2">
               <a
                 href="https://github.com/Suvassingh"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-300 hover:text-white"
+                className={
+                  "text-gray-700 hover:text-gray-900"
+                }
               >
                 <FaGithub size={24} />
               </a>
@@ -138,10 +152,24 @@ const Navbar = () => {
                 href="https://www.linkedin.com/in/subhash-singh-ba061b2a5/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-300 hover:text-white"
+                className={
+                  
+                  "text-gray-700 hover:text-gray-900"
+                }
               >
                 <FaLinkedin size={24} />
               </a>
+              {/* <button
+                onClick={toggleTheme}
+                className={
+                  isDark
+                    ? "text-gray-300 hover:text-[#8245ec]"
+                    : "text-gray-700 hover:text-[#8245ec]"
+                }
+                aria-label="Toggle theme"
+              >
+                {isDark ? <FiSun size={22} /> : <FiMoon size={22} />}
+              </button> */}
             </div>
           </ul>
         </div>
