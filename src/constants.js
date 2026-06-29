@@ -193,7 +193,7 @@ export const experience = [
       title: "Telemedical App",
       description:
         "A telemedical app is a digital platform that allows patients to consult doctors and healthcare providers remotely via video, audio, or chat. It enables appointment scheduling, health record management, and real-time medical advice, making healthcare accessible and convenient from anywhere.                                It might not be available on web and mobile because of not deployed yet.And git reposirtory is private.If you want then send me the mail i will provide it to you.",
-      image: telemedicalLogo,
+      image: certi,
       images: [certi,telemedicalLogo, group],
 
       tags: ["Flutter", "Firebase", "WebRtc"],
