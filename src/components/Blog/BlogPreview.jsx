@@ -15,6 +15,29 @@ const BlogPreview = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  // ─── Helpers ───────────────────────────────────────────────────────────
+  const cleanHtml = (html) => {
+    const withoutStyle = html.replace(/<style[^>]*>.*?<\/style>/gi, "");
+    const withoutScript = withoutStyle.replace(
+      /<script[^>]*>.*?<\/script>/gi,
+      "",
+    );
+    return withoutScript;
+  };
+
+  const excerpt = (html) => {
+    const text = cleanHtml(html).replace(/<[^>]+>/g, "");
+    return text.slice(0, 100) + (text.length > 100 ? "…" : "");
+  };
+
+  const formatDate = (ts) =>
+    new Date(ts).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+
+  // ─── Fetch posts ─────────────────────────────────────────────────────
   useEffect(() => {
     const fetchLatest = async () => {
       try {
@@ -40,18 +63,7 @@ const BlogPreview = () => {
     fetchLatest();
   }, []);
 
-  const formatDate = (ts) =>
-    new Date(ts).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-
-  const excerpt = (html) => {
-    const text = html.replace(/<[^>]+>/g, "");
-    return text.slice(0, 100) + (text.length > 100 ? "…" : "");
-  };
-
+  // ─── Render ──────────────────────────────────────────────────────────
   return (
     <section className="py-16 px-[12vw] md:px-[7vw] lg:px-[20vw] bg-gradient-to-b from-gray-900/30 to-transparent">
       <div className="text-center mb-12">

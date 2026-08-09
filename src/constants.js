@@ -8,7 +8,6 @@ import reactjsLogo from "./assets/tech_logo/reactjs.png";
 // import reduxLogo from "./assets/tech_logo/redux.png";
 import nextjsLogo from "./assets/tech_logo/nextjs.png";
 import tailwindcssLogo from "./assets/tech_logo/tailwindcss.png";
-import gsapLogo from "./assets/tech_logo/gsap.png";
 import materialuiLogo from "./assets/tech_logo/materialui.png";
 import bootstrapLogo from "./assets/tech_logo/bootstrap.png";
 // import springbootLogo from "./assets/tech_logo/springboot.png";
@@ -62,7 +61,6 @@ export const SkillsInfo = [
       // { name: "Redux", logo: reduxLogo },
       { name: "Next JS", logo: nextjsLogo },
       { name: "Tailwind CSS", logo: tailwindcssLogo },
-      { name: "GSAP", logo: gsapLogo },
       { name: "Material UI", logo: materialuiLogo },
       { name: "Bootstrap", logo: bootstrapLogo },
       { name: "Flutter", logo: flutterLogo },

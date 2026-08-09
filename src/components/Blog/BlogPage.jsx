@@ -76,16 +76,23 @@ const BlogPage = () => {
       day: "numeric",
     });
 
-  const readTime = (html) => {
-    const text = html.replace(/<[^>]+>/g, "");
-    const words = text.trim().split(/\s+/).length;
-    return Math.max(1, Math.ceil(words / 200));
-  };
-
-  const excerpt = (html) => {
-    const text = html.replace(/<[^>]+>/g, "");
-    return text.slice(0, 160) + (text.length > 160 ? "…" : "");
-  };
+const readTime = (html) => {
+  const text = cleanHtml(html).replace(/<[^>]+>/g, "");
+  const words = text.trim().split(/\s+/).length;
+  return Math.max(1, Math.ceil(words / 200));
+};
+const cleanHtml = (html) => {
+  const withoutStyle = html.replace(/<style[^>]*>.*?<\/style>/gi, "");
+  const withoutScript = withoutStyle.replace(
+    /<script[^>]*>.*?<\/script>/gi,
+    "",
+  );
+  return withoutScript;
+};
+const excerpt = (html) => {
+  const text = cleanHtml(html).replace(/<[^>]+>/g, "");
+  return text.slice(0, 160) + (text.length > 160 ? "…" : "");
+};
 
   // Share helpers
   const getShareUrl = () => {
@@ -133,24 +140,26 @@ const BlogPage = () => {
   // Single post view (with share buttons)
   if (selectedPost) {
     // Full custom layout – render raw HTML without extra chrome, but with white background
-    if (selectedPost.fullCustomLayout) {
-      return (
-        <div className="min-h-screen bg-white">
-          <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 px-4 py-3">
-            <button
-              onClick={() => {
-                setSelectedPost(null);
-                navigate("/blog");
-              }}
-              className="text-purple-600 hover:text-purple-800 text-sm font-medium"
-            >
-              ← Back to Blog
-            </button>
-          </div>
-          <div dangerouslySetInnerHTML={{ __html: selectedPost.content }} />
-        </div>
-      );
-    }
+if (selectedPost.fullCustomLayout) {
+  return (
+    <div className="min-h-screen bg-white">
+      <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 px-4 py-3">
+        <button
+          onClick={() => {
+            setSelectedPost(null);
+            navigate("/blog");
+          }}
+          className="text-purple-600 hover:text-purple-800 text-sm font-medium"
+        >
+          ← Back to Blog
+        </button>
+      </div>
+      <div className="max-w-full overflow-hidden">
+        <div dangerouslySetInnerHTML={{ __html: selectedPost.content }} />
+      </div>
+    </div>
+  );
+}
 
     // Default blog layout with share buttons – light theme for readability
     return (
@@ -297,23 +306,123 @@ const BlogPage = () => {
         </article>
 
         <style>{`
-          @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&display=swap');
-          .blog-content { color: #374151; line-height: 1.85; font-size: 1.05rem; }
-          .blog-content h1, .blog-content h2, .blog-content h3 { color: #111827; font-family: 'Syne', sans-serif; margin: 2rem 0 1rem; font-weight: 700; }
-          .blog-content h1 { font-size: 2rem; }
-          .blog-content h2 { font-size: 1.5rem; }
-          .blog-content h3 { font-size: 1.25rem; }
-          .blog-content p { margin-bottom: 1.25rem; }
-          .blog-content img { max-width: 100%; border-radius: 12px; margin: 1.5rem 0; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-          .blog-content ul, .blog-content ol { padding-left: 1.5rem; margin-bottom: 1.25rem; }
-          .blog-content li { margin-bottom: 0.5rem; }
-          .blog-content blockquote { border-left: 3px solid #9333ea; padding-left: 1rem; color: #4b5563; font-style: italic; margin: 1.5rem 0; background: #f9fafb; border-radius: 0 8px 8px 0; }
-          .blog-content strong { color: #111827; font-weight: 600; }
-          .blog-content a { color: #7e22ce; text-decoration: underline; }
-          .blog-content pre { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; overflow-x: auto; margin: 1.5rem 0; }
-          .blog-content code { font-family: monospace; font-size: 0.9em; background: #f3f4f6; padding: 2px 6px; border-radius: 4px; color: #1f2937; }
-          .blog-content pre code { background: none; padding: 0; }
-        `}</style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&display=swap');
+
+  .blog-content {
+    color: #374151;
+    line-height: 1.85;
+    font-size: 1.05rem;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+  }
+
+  .blog-content h1,
+  .blog-content h2,
+  .blog-content h3 {
+    color: #111827;
+    font-family: 'Syne', sans-serif;
+    margin: 2rem 0 1rem;
+    font-weight: 700;
+    word-break: break-word;
+  }
+
+  .blog-content h1 {
+    font-size: clamp(1.8rem, 5vw, 2.5rem);
+  }
+  .blog-content h2 {
+    font-size: clamp(1.5rem, 4vw, 2rem);
+  }
+  .blog-content h3 {
+    font-size: clamp(1.2rem, 3vw, 1.5rem);
+  }
+
+  .blog-content p {
+    margin-bottom: 1.25rem;
+    word-break: break-word;
+  }
+
+  .blog-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 12px;
+    margin: 1.5rem 0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    display: block;
+  }
+
+  .blog-content ul,
+  .blog-content ol {
+    padding-left: 1.5rem;
+    margin-bottom: 1.25rem;
+    word-break: break-word;
+  }
+
+  .blog-content li {
+    margin-bottom: 0.5rem;
+  }
+
+  .blog-content blockquote {
+    border-left: 3px solid #9333ea;
+    padding-left: 1rem;
+    color: #4b5563;
+    font-style: italic;
+    margin: 1.5rem 0;
+    background: #f9fafb;
+    border-radius: 0 8px 8px 0;
+    word-break: break-word;
+  }
+
+  .blog-content strong {
+    color: #111827;
+    font-weight: 600;
+  }
+
+  .blog-content a {
+    color: #7e22ce;
+    text-decoration: underline;
+    word-break: break-word;
+  }
+
+  .blog-content pre {
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1rem;
+    overflow-x: auto;
+    margin: 1.5rem 0;
+    max-width: 100%;
+    font-size: 0.9rem;
+  }
+
+  .blog-content code {
+    font-family: monospace;
+    font-size: 0.9em;
+    background: #f3f4f6;
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: #1f2937;
+    word-break: break-word;
+  }
+
+  .blog-content pre code {
+    background: none;
+    padding: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* Responsive adjustments for very small screens */
+  @media (max-width: 640px) {
+    .blog-content {
+      font-size: 0.95rem;
+    }
+    .blog-content blockquote {
+      padding-left: 0.75rem;
+      margin: 1rem 0;
+    }
+  }
+`}</style>
       </div>
     );
   }
