@@ -220,7 +220,7 @@ export const projects = [
   },
   {
     id: 5,
-    title: "Shopify",
+    title: "E-Shopify",
     description:
       "E-commerce storefront clone with product listings, cart, secure payments, and customizable themes. Built with Flutter, Firebase, and GetX for state management.",
     image: shopifyLogo,
