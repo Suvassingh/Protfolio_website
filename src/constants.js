@@ -46,7 +46,7 @@ import shopifyLogo from "./assets/project/shopify.png";
 import group from "./assets/project/group.jpg";
 import certi from "./assets/project/certi.jpg";
 import finderLogo from "./assets/project/finder.png";
-import quickBiteLogo from "./assets/project/quickdine.png";
+import quickBiteLogo from "./assets/project/quickbite.png";
 export const SkillsInfo = [
   {
     title: "Frontend",
