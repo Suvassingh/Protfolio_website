@@ -61,7 +61,7 @@ const TECH_LOGOS = {
   Vercel: vercelLogo,
 };
 
-// ---------- Work Component ----------
+//   Work Component  
 const Work = () => {
   const [selectedProject, setSelectedProject] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);

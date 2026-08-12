@@ -15,7 +15,7 @@ const BlogPreview = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // ─── Helpers ───────────────────────────────────────────────────────────
+  //   Helpers  
   const cleanHtml = (html) => {
     const withoutStyle = html.replace(/<style[^>]*>.*?<\/style>/gi, "");
     const withoutScript = withoutStyle.replace(
@@ -37,7 +37,7 @@ const BlogPreview = () => {
       year: "numeric",
     });
 
-  // ─── Fetch posts ─────────────────────────────────────────────────────
+  //   Fetch posts  
   useEffect(() => {
     const fetchLatest = async () => {
       try {
@@ -63,7 +63,7 @@ const BlogPreview = () => {
     fetchLatest();
   }, []);
 
-  // ─── Render ──────────────────────────────────────────────────────────
+  //   Render  
   return (
     <section className="py-16 px-[12vw] md:px-[7vw] lg:px-[20vw] bg-gradient-to-b from-gray-900/30 to-transparent">
       <div className="text-center mb-12">

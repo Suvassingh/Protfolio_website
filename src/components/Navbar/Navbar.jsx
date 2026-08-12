@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FiMenu, FiX, FiSun, FiMoon } from "react-icons/fi";
 import { FaGithub, FaLinkedin } from "react-icons/fa";
-// import { useTheme } from "../../context/ThemeContext.jsx";
-
+ 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("");

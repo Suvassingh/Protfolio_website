@@ -18,7 +18,7 @@ import BlogPage from "./components/Blog/BlogPage";
 import BlogLogin from "./components/Blog/BlogLogin";
 import BlogAdmin from "./components/Blog/BlogAdmin";
 
-// ─── Portfolio Home ───────────────────────────────────────────────────────────
+//  Portfolio Home  
 // inside Home component
 const Home = () => (
   <div className="bg-white dark:bg-[#050414] transition-colors duration-300">
@@ -43,7 +43,7 @@ const Home = () => (
   </div>
 );
 
-// ─── App with Router ──────────────────────────────────────────────────────────
+//   App with Router  
 const App = () => (
     <ThemeProvider>
   <BrowserRouter>

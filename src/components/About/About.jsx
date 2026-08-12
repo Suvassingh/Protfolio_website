@@ -41,7 +41,7 @@ const About = () => {
           </h3>
 
           <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400 mb-10 mt-8 leading-relaxed">
-            I am a full-stack developer with over 2 years of experience in
+            I am a full-stack developer with over 3 years of experience in
             building scalable web applications. Skilled in both front-end and
             back-end development, I specialize in the MERN stack, Flutter and
             other modern technologies to create seamless user experiences and
@@ -51,7 +51,7 @@ const About = () => {
           {/* Responsive button group */}
           <div className="flex flex-col sm:flex-row items-center gap-4 mt-5">
             <a
-              href="https://drive.google.com/file/d/1fY9JRCF8kHOtBAJi66JjSdmc5EXcMDR-/view?usp=drivesdk"
+              href="https://drive.google.com/file/d/1zlMbpgFStAhKAV0-095NUSebqUIImPsq/view?usp=drivesdk"
               target="_blank"
               rel="noopener noreferrer"
               className="text-white py-3 px-8 rounded-full text-lg font-bold transition duration-300 transform hover:scale-105 w-full sm:w-auto text-center"
