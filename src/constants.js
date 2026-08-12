@@ -29,25 +29,24 @@ import postmanLogo from "./assets/tech_logo/postman.png";
 import figmaLogo from "./assets/tech_logo/figma.png";
 import netlifyLogo from "./assets/tech_logo/netlify.png";
 import vercelLogo from "./assets/tech_logo/vercel.png";
-import flutterLogo from "./assets/tech_logo/flutter.png"
+import flutterLogo from "./assets/tech_logo/flutter.png";
 import cpp from "./assets/tech_logo/cpp.png";
-import dart from"./assets/tech_logo/dart.png"
+import dart from "./assets/tech_logo/dart.png";
 
 // education logo
-import lotusLogo from './assets/education_logo/lotus.png'
-import arnikoLogo from './assets/education_logo/arniko.png'
-import kuLogo from './assets/education_logo/ku.png'
+import lotusLogo from "./assets/education_logo/lotus.png";
+import arnikoLogo from "./assets/education_logo/arniko.png";
+import kuLogo from "./assets/education_logo/ku.png";
 
 // project logo
-import eStoreLogo from './assets/project/e-store.png'
-import sewaMitraLogo from './assets/project/sewamitra.png'
-import telemedicalLogo from './assets/project/d1.png'
-import shopifyLogo from './assets/project/shopify.png'
+import eStoreLogo from "./assets/project/e-store.png";
+import sewaMitraLogo from "./assets/project/sewamitra.png";
+import telemedicalLogo from "./assets/project/d1.png";
+import shopifyLogo from "./assets/project/shopify.png";
 import group from "./assets/project/group.jpg";
 import certi from "./assets/project/certi.jpg";
-
-
-
+import finderLogo from "./assets/project/finder.png";
+import quickBiteLogo from "./assets/project/quickdine.png";
 export const SkillsInfo = [
   {
     title: "Frontend",
@@ -82,13 +81,13 @@ export const SkillsInfo = [
     title: "Languages",
     skills: [
       { name: "C", logo: cLogo },
-      { name: "C++", logo:cpp },
+      { name: "C++", logo: cpp },
       // { name: "Java", logo: javaLogo },
       { name: "Python", logo: pythonLogo },
       // { name: "C-Sharp", logo: csharpLogo },
       { name: "JavaScript", logo: javascriptLogo },
       // { name: "TypeScript", logo: typescriptLogo },
-      { name: "Dart", logo: dart }, 
+      { name: "Dart", logo: dart },
     ],
   },
   {
@@ -156,56 +155,77 @@ export const experience = [
   },
 ];
 
-  export const projects = [
-    {
-      id: 0,
-      title: "E-Store",
-      description:
-        "An e-store website is an online platform that allows businesses and individuals to buy and sell products or services over the internet. It provides features like product listings, shopping carts, secure payment gateways, and order tracking. E-commerce websites make shopping convenient, accessible 24/7, and often offer a wide variety of products at competitive prices.",
-      image: eStoreLogo,
-      tags: [
-        "HTML",
-        "CSS",
-        "JavaScript",
-        "React JS",
-        "API",
-        "mongoDb",
-        "Stripe",
-      ],
-      github: "https://github.com/Suvassingh/E-commerce.git",
-      webapp: "https://emptymind.vercel.app/",
-    },
-    {
-      id: 1,
-      title: "SewaMitra",
-      description:
-        "A service provider app is a platform that connects customers with professionals or businesses, enabling easy booking, payment, and delivery of services like home care, or repairs—all in one place.",
-      image: sewaMitraLogo,
-      tags: ["Flutter", "API", "Firebase"],
-      github: "https://github.com/Suvassingh/SEWAMITRA1.git",
-      webapp: "",
-      apk: "/public/sewamitra.apk",
-    },
-    {
-      id: 2,
-      title: "Telemedical App",
-      description:
-        "A telemedical app is a digital platform that allows patients to consult doctors and healthcare providers remotely via video, audio, or chat. It enables appointment scheduling, health record management, and real-time medical advice, making healthcare accessible and convenient from anywhere.                                It might not be available on web and mobile because of not deployed yet.And git reposirtory is private.If you want then send me the mail i will provide it to you.",
-      image: certi,
-      images: [certi,telemedicalLogo, group],
-
-      tags: ["Flutter", "Firebase", "WebRtc"],
-      github: "https://github.com/Suvassingh/TelemedicalApp.git",
-      webapp: "",
-    },
-    {
-      id: 3,
-      title: "Shopify",
-      description:
-        "Shopify clone is an e-commerce platform that allows users to create and manage their own online stores, offering features like product listings, shopping carts, secure payments, and customizable themes for a seamless shopping experience.",
-      image: shopifyLogo,
-      tags: ["Flutter", "Firebase", "GETX"],
-      github: "https://github.com/Suvassingh/Shopify.git",
-      webapp: "",
-    },
-  ];
+export const projects = [
+  {
+    id: 0,
+    title: "E-Store",
+    description:
+      "E-commerce web platform simplifying online buying and selling of products. Built on the MERN stack with Stripe integration for secure payments, covering product listings, cart, and order tracking.",
+    image: eStoreLogo,
+    tags: ["HTML", "CSS", "JavaScript", "React JS", "API", "MongoDB", "Stripe"],
+    github: "https://github.com/Suvassingh/E-Commerc.git",
+    webapp: "https://emptymind.vercel.app/",
+  },
+  {
+    id: 1,
+    title: "SewaMitra",
+    description:
+      "Home services marketplace connecting service providers with users through location-based matching. Built with Flutter, Firebase, and OpenStreetMap (OSM), covering provider discovery, booking, and direct contact.",
+    image: sewaMitraLogo,
+    tags: ["Flutter", "Firebase", "OpenStreetMap", "API"],
+    github: "https://github.com/Suvassingh/SEWAMITRA1.git",
+    webapp: "",
+    apk: "/public/sewamitra.apk",
+  },
+  {
+    id: 2,
+    title: "Telemedical App",
+    description:
+      "Doctor-patient telehealth app enabling consultations via chat, audio, and video. Implemented real-time communication using Flutter, WebRTC, and LiveKit, with Supabase for backend data and Redis for caching, containerized with Docker for deployment. Not yet deployed to web/mobile — repository is private, email me for access.",
+    image: certi,
+    images: [certi, telemedicalLogo, group],
+    tags: [
+      "Flutter",
+      "Firebase",
+      "WebRTC",
+      "LiveKit",
+      "Supabase",
+      "Redis",
+      "Docker",
+    ],
+    github:
+      "https://github.com/Suvassingh/Nexora-health--Next-generation-healthcare-with-a-strong-modern-presence.git",
+    webapp: "",
+  },
+  {
+    id: 3,
+    title: "QuickBite",
+    description:
+      "Multi-vendor food delivery platform with dedicated rider and vendor-facing apps, covering live order tracking and the full delivery flow. Built with Flutter and Node.js, handling real-time state across order placement, dispatch, and delivery confirmation.",
+    image: quickBiteLogo,
+    tags: ["Flutter", "Node.js", "API", "Real-time Tracking"],
+    github: "https://github.com/Suvassingh/QuickBite_Rider_App.git",
+    webapp: "",
+    apk: "",
+  },
+  {
+    id: 4,
+    title: "Finder",
+    description:
+      "Multi-category service finder app for discovering rooms, hotels, buses, salons, and more. Built with Flutter, Django, and MySQL, letting users view service details and contact providers directly by phone.",
+    image: finderLogo,
+    tags: ["Flutter", "Django", "MySQL", "API"],
+    github: "https://github.com/Suvassingh/Services.git",
+    webapp: "",
+  },
+  {
+    id: 5,
+    title: "Shopi",
+    description:
+      "E-commerce storefront clone with product listings, cart, secure payments, and customizable themes. Built with Flutter, Firebase, and GetX for state management.",
+    image: shopifyLogo,
+    tags: ["Flutter", "Firebase", "GetX"],
+    github: "https://github.com/Suvassingh/Shopify.git",
+    webapp: "",
+  },
+];
