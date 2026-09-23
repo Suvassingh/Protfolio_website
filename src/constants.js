@@ -23,7 +23,7 @@ import firebaseLogo from "./assets/tech_logo/firebase.png";
 import postgresqlLogo from "./assets/tech_logo/postgre.png";
 // import javaLogo from "./assets/tech_logo/java.png";
 import pythonLogo from "./assets/tech_logo/python.png";
-// import typescriptLogo from "./assets/tech_logo/typescript.png";
+import typescriptLogo from "./assets/tech_logo/typescript.png";
 import vscodeLogo from "./assets/tech_logo/vscode.png";
 import postmanLogo from "./assets/tech_logo/postman.png";
 import figmaLogo from "./assets/tech_logo/figma.png";
@@ -32,6 +32,8 @@ import vercelLogo from "./assets/tech_logo/vercel.png";
 import flutterLogo from "./assets/tech_logo/flutter.png";
 import cpp from "./assets/tech_logo/cpp.png";
 import dart from "./assets/tech_logo/dart.png";
+import django from "./assets/tech_logo/django.png";
+import reactnativeLogo from "./assets/tech_logo/reactnative.png";
 
 // education logo
 import lotusLogo from "./assets/education_logo/lotus.png";
@@ -58,11 +60,12 @@ export const SkillsInfo = [
       { name: "React JS", logo: reactjsLogo },
       // { name: "Angular", logo: angularLogo },
       // { name: "Redux", logo: reduxLogo },
-      { name: "Next JS", logo: nextjsLogo },
+      // { name: "Next JS", logo: nextjsLogo },
       { name: "Tailwind CSS", logo: tailwindcssLogo },
       { name: "Material UI", logo: materialuiLogo },
       { name: "Bootstrap", logo: bootstrapLogo },
       { name: "Flutter", logo: flutterLogo },
+      { name: "React Native", logo: reactnativeLogo },
     ],
   },
   {
@@ -70,11 +73,12 @@ export const SkillsInfo = [
     skills: [
       // { name: "Springboot", logo: springbootLogo },
       { name: "Node js", logo: nodejsLogo },
-      { name: "Express JS", logo: expressjsLogo },
+      // { name: "Express JS", logo: expressjsLogo },
       { name: "MySQL", logo: mysqlLogo },
       { name: "MongoDB", logo: mongodbLogo },
       { name: "Firebase", logo: firebaseLogo },
       { name: "PostgreSQL", logo: postgresqlLogo },
+      { name: "Django", logo: django },
     ],
   },
   {
@@ -86,7 +90,7 @@ export const SkillsInfo = [
       { name: "Python", logo: pythonLogo },
       // { name: "C-Sharp", logo: csharpLogo },
       { name: "JavaScript", logo: javascriptLogo },
-      // { name: "TypeScript", logo: typescriptLogo },
+      { name: "TypeScript", logo: typescriptLogo },
       { name: "Dart", logo: dart },
     ],
   },
