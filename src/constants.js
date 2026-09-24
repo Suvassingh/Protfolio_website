@@ -114,7 +114,7 @@ export const education = [
     img: kuLogo,
     school: "kathmandu university",
     date: "Dec 2022 - Till now",
-    GPA: "3.5",
+    CGPA: "3.7",
     desc: "I am pursuing my Bachelor's degree in Computer Science (B.Sc.) at Kathmandu University, Dulikhel. Throughout my studies, I explore a variety of subjects that deepen my understanding of computing and technology. From learning Data Structures and Algorithms to working on Web Development and Database Management Systems, I gain practical insights into the world of software development. My time at KU allows me to work on projects that apply theoretical concepts to real-world problems.",
     degree: "Bachelor of Science - BSC (Computer Science)",
   },
