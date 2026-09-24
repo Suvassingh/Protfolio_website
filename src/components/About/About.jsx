@@ -24,9 +24,7 @@ const About = () => {
             <span className="text-[#B245ec]">
               <ReactTypingEffect
                 text={[
-                  "Fullstack Developer",
                   "App Developer",
-                  "UI/UX Designer",
                   "Tech Enthusiast",
                 ]}
                 speed={100}
@@ -41,9 +39,9 @@ const About = () => {
           </h3>
 
           <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400 mb-10 mt-8 leading-relaxed">
-            I am a full-stack developer with over 3 years of experience in
-            building scalable web applications. Skilled in both front-end and
-            back-end development, I specialize in the MERN stack, Flutter and
+            I am a mobile app developer with over 1.5 years of experience in
+            building scalable  applications. Skilled in both front-end and
+            back-end development, I specialize in the  Flutter, React Native and
             other modern technologies to create seamless user experiences and
             efficient solutions.
           </p>
